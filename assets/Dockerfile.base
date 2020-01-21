@@ -62,9 +62,13 @@ RUN \
     mkdir /app && \
     chown www-data:www-data /app && \
     ccm-stop >/dev/nul 2>&1 && \
+    printf '#!/bin/bash\nccm-start && bash; ccm-stop' > /entrypoint.sh && \
+    chmod +x /entrypoint.sh && \
     \
     echo 'Ready.'
 
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 
 WORKDIR /app
+
+ENTRYPOINT [ "/entrypoint.sh" ]
