@@ -1,0 +1,68 @@
+FROM php:7.2-fpm
+
+ENV C5_SUDOAS=www-data
+
+ARG DEBIAN_FRONTEND=noninteractive
+
+ARG PHP_EXTENSIONS="gd pdo_mysql zip"
+
+COPY --from=mlocati/php-extension-installer /usr/bin/install-php-extensions /usr/local/bin/
+COPY ccm-start /usr/local/bin/
+COPY ccm-stop /usr/local/bin/
+ADD https://raw.githubusercontent.com/concrete5/cli/master/c5 /usr/local/bin/
+ADD https://raw.githubusercontent.com/concrete5/cli/master/composerpkg /usr/local/bin/
+
+EXPOSE 80
+
+RUN \
+    echo '### Updating system' && \
+    apt-get update -q && \
+    apt-get upgrade -yq && \
+    apt-get autoremove --purge -yqq && \
+    apt-get install -yqq gnupg unzip sudo && \
+    \
+    echo '### Configuring helper commands' && \
+    chmod 0755 \
+        /usr/local/bin/ccm-start \
+        /usr/local/bin/ccm-stop \
+        /usr/local/bin/c5 \
+        /usr/local/bin/composerpkg \
+        && \
+    \
+    echo '### Installing MariaDB' && \
+    curl -sSL https://downloads.mariadb.com/MariaDB/mariadb_repo_setup | bash && \
+    apt-get install -yqq mariadb-server && \
+    /bin/sh -c '/usr/bin/mysqld_safe >/dev/null 2>&1 &' && \
+    \
+    echo '### Installing Nginx' && \
+    curl -sSL -o nginx_signing.key https://nginx.org/keys/nginx_signing.key && \
+    APT_KEY_DONT_WARN_ON_DANGEROUS_USAGE=1 apt-key add nginx_signing.key && \
+    rm nginx_signing.key && \
+    echo "deb https://nginx.org/packages/debian/ $(. /etc/os-release; printf '%s' "$VERSION" | cut -d\( -f2 | cut -d\) -f1) nginx" >/etc/apt/sources.list.d/nginx.list && \
+    apt-get update -q && \
+    apt-get install -yqq nginx && \
+    \
+    echo '### Configuring PHP' && \
+    sed -i 's/^;pid\s*=\s*run\/php-fpm\.pid$/pid=\/run\/php-fpm.pid/' /usr/local/etc/php-fpm.conf && \
+    install-php-extensions $PHP_EXTENSIONS && \
+    echo 'pdo_mysql.default_socket=/var/run/mysqld/mysqld.sock' >>/usr/local/etc/php/conf.d/docker-php-ext-pdo_mysql.ini && \
+    \
+    echo '### Installing Composer' && \
+    curl -sSL https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer && \
+    mkdir -p /var/www/.composer && \
+    chown -R www-data:www-data /var/www/.composer && \
+    sudo -u www-data -- composer global require hirak/prestissimo && \
+    \
+    echo '### Configuring database' && \
+    echo "CREATE USER 'c5'@'localhost' IDENTIFIED BY '12345'; CREATE DATABASE c5 COLLATE 'utf8mb4_unicode_ci'; GRANT ALL PRIVILEGES ON c5.* TO 'c5'@'localhost'; FLUSH PRIVILEGES;" | mysql && \
+    \
+    echo '### Final operations' && \
+    mkdir /app && \
+    chown www-data:www-data /app && \
+    ccm-stop >/dev/nul 2>&1 && \
+    \
+    echo 'Ready.'
+
+COPY nginx.conf /etc/nginx/conf.d/default.conf
+
+WORKDIR /app

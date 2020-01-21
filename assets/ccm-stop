@@ -1,0 +1,38 @@
+#!/bin/sh
+
+
+rc=0
+
+printf 'Stopping MariaDB... '
+if mysqladmin status -s >/dev/null; then
+    if mysqladmin shutdown; then
+        printf 'done.\n'
+    else
+        printf 'FAILED!.\n' >&2
+        rc=1
+    fi
+else
+    printf 'done.\n'
+fi
+
+printf 'Stopping nginx... '
+if service nginx stop; then
+    printf 'done.\n'
+else
+    printf 'FAILED!.\n' >&2
+    rc=1
+fi
+
+printf 'Stopping php-fpm... '
+if test -f /run/php-fpm.pid; then
+    if kill -s3 $(cat /run/php-fpm.pid); then
+        printf 'done.\n'
+    else
+        printf 'FAILED!.\n' >&2
+        rc=1
+    fi
+else
+    printf 'done.\n'
+fi
+
+exit $rc
