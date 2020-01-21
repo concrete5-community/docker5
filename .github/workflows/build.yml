@@ -1,0 +1,41 @@
+name: Build Docker images
+
+on:
+  pull_request:
+  push:
+    branches:
+      - master
+
+jobs:
+  build_base:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        php_version: ["5.6", "7.2"]
+    name: Build base Docker image for ${{ matrix.php_version }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v1
+        with:
+          fetch-depth: 1
+      - name: Build Docker image
+        run: docker build --build-arg CCM_PHP_VERSION=${{ matrix.php_version }} --file ./assets/Dockerfile.base --force-rm --rm --tag mlocati/docker5:base-${{ matrix.php_version }} ./assets
+      - name: Save Docker image
+        if: github.event_name != 'push' || github.ref != 'refs/heads/master'
+        run: |
+          mkdir -p /tmp/base-images
+          docker save mlocati/docker5:base-${{ matrix.php_version }} | gzip > /tmp/base-images/base-${{ matrix.php_version }}.tgz
+      - name: Upload Docker image
+        if: github.event_name != 'push' || github.ref != 'refs/heads/master'
+        uses: actions/upload-artifact@v1
+        with:
+          name: base-images
+          path: /tmp/base-images
+      - name: Publish Docker image
+        if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+        uses: elgohr/Publish-Docker-Github-Action@master
+        with:
+          name: mlocati/docker5
+          tags: base-${{ matrix.php_version }}
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
