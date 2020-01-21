@@ -1,4 +1,6 @@
-FROM php:7.2-fpm
+ARG CCM_PHP_VERSION=7.2
+
+FROM php:${CCM_PHP_VERSION}-fpm
 
 ENV C5_SUDOAS=www-data
 
@@ -19,7 +21,7 @@ RUN \
     apt-get update -q && \
     apt-get upgrade -yq && \
     apt-get autoremove --purge -yqq && \
-    apt-get install -yqq gnupg unzip sudo && \
+    apt-get install -yqq gnupg unzip sudo apt-transport-https && \
     \
     echo '### Configuring helper commands' && \
     chmod 0755 \
@@ -30,7 +32,7 @@ RUN \
         && \
     \
     echo '### Installing MariaDB' && \
-    curl -sSL https://downloads.mariadb.com/MariaDB/mariadb_repo_setup | bash && \
+    curl -sSL https://downloads.mariadb.com/MariaDB/mariadb_repo_setup | bash -s -- --skip-maxscale && \
     apt-get install -yqq mariadb-server && \
     /bin/sh -c '/usr/bin/mysqld_safe >/dev/null 2>&1 &' && \
     \
