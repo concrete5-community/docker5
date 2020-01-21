@@ -7,7 +7,7 @@ They are really useful if you want to run a concrete5 instance without the hassl
 For example, if you want to test your concrete5 package with concrete5 8.5.2, you can simply run this command:
 
 ```bash
-docker run --rm -it -p 8080:80 mlocati/docker5:8.5.2-full -v /path/to/your/package:/app/packages/package_handle
+docker run --rm -it -p 8080:80 -v /path/to/your/package:/app/packages/package_handle mlocati/docker5:8.5.2-full
 ```
 
 Where:
