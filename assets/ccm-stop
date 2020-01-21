@@ -24,15 +24,18 @@ else
 fi
 
 printf 'Stopping php-fpm... '
-if test -f /run/php-fpm.pid; then
-    if kill -s3 $(cat /run/php-fpm.pid); then
+LSOF_OUT="$(lsof -iTCP:9000 2>&1 || true)"
+if test -z "$LSOF_OUT"; then
+    printf 'done.\n'
+else
+    IFS='
+ ' LSOF_PID=$(printf %s "$LSOF_OUT" | awk 'NR > 1 {print $2}')
+    if kill -s3 $LSOF_PID; then
         printf 'done.\n'
     else
         printf 'FAILED!.\n' >&2
         rc=1
     fi
-else
-    printf 'done.\n'
 fi
 
 exit $rc

@@ -5,6 +5,7 @@ RUN \
     ccm-start && \
     curl -sSL https://github.com/concrete5/concrete5/archive/develop.tar.gz | sudo -u www-data -- tar xz --strip 1 && \
     sudo -u www-data -- composer install --optimize-autoloader --no-suggest && \
+    sudo -u www-data -- composer clear-cache && \
     c5 c5:install \
         --db-server=localhost \
         --db-username=c5 \
@@ -17,6 +18,5 @@ RUN \
         --admin-password=12345 \
         && \
     \
-    curl -sSv -o /dev/null http://localhost && \
     ccm-stop && \
     echo 'Ready.'

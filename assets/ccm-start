@@ -31,18 +31,22 @@ else
 fi
 
 printf 'Starting php-fpm... '
-if test -f /run/php-fpm.pid; then
+if lsof -iTCP:9000 >/dev/null 2>&1; then
     printf 'done.\n'
 else
     /bin/sh -c 'php-fpm >/var/log/php-fpm-log 2>&1 &'
-    sleep 1
-    if ! test -f /run/php-fpm.pid; then
-        printf 'FAILED!.\n' >&2
-        cat /var/log/php-fpm-log >&2
-        rc=1
-    else
-        printf 'done.\n'
-    fi
+    for i in $(seq 1 31); do
+        if test $i -eq 31; then
+            printf 'FAILED!.\n' >&2
+            cat /var/log/php-fpm-log >&2
+            rc=1
+            break
+        fi
+        if lsof -iTCP:9000 >/dev/null 2>&1; then
+            printf 'done.\n'
+            break
+        fi
+    done
 fi
 
 exit $rc

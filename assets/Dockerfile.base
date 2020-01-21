@@ -43,7 +43,6 @@ RUN \
     apt-get install -yqq nginx && \
     \
     echo '### Configuring PHP' && \
-    sed -i 's/^;pid\s*=\s*run\/php-fpm\.pid$/pid=\/run\/php-fpm.pid/' /usr/local/etc/php-fpm.conf && \
     install-php-extensions $PHP_EXTENSIONS && \
     echo 'pdo_mysql.default_socket=/var/run/mysqld/mysqld.sock' >>/usr/local/etc/php/conf.d/docker-php-ext-pdo_mysql.ini && \
     \
@@ -52,6 +51,7 @@ RUN \
     mkdir -p /var/www/.composer && \
     chown -R www-data:www-data /var/www/.composer && \
     sudo -u www-data -- composer global require hirak/prestissimo && \
+    sudo -u www-data -- composer clear-cache && \
     \
     echo '### Configuring database' && \
     echo "CREATE USER 'c5'@'localhost' IDENTIFIED BY '12345'; CREATE DATABASE c5 COLLATE 'utf8mb4_unicode_ci'; GRANT ALL PRIVILEGES ON c5.* TO 'c5'@'localhost'; FLUSH PRIVILEGES;" | mysql && \
