@@ -64,7 +64,7 @@ RUN \
     echo '### Final operations' && \
     mkdir /app && \
     chown www-data:www-data /app && \
-    ccm-stop >/dev/nul 2>&1 && \
+    ccm-stop && \
     \
     echo 'Ready.'
 
