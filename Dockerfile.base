@@ -9,8 +9,10 @@ ARG DEBIAN_FRONTEND=noninteractive
 ARG PHP_EXTENSIONS="gd pdo_mysql zip"
 
 COPY --from=mlocati/php-extension-installer /usr/bin/install-php-extensions /usr/local/bin/
-COPY ccm-start /usr/local/bin/
-COPY ccm-stop /usr/local/bin/
+COPY assets/ccm-start /usr/local/bin/
+COPY assets/ccm-stop /usr/local/bin/
+COPY assets/entrypoint.sh /
+
 ADD https://raw.githubusercontent.com/concrete5/cli/master/c5 /usr/local/bin/
 ADD https://raw.githubusercontent.com/concrete5/cli/master/composerpkg /usr/local/bin/
 
@@ -29,6 +31,7 @@ RUN \
         /usr/local/bin/ccm-stop \
         /usr/local/bin/c5 \
         /usr/local/bin/composerpkg \
+        /entrypoint.sh \
         && \
     \
     echo '### Installing MariaDB' && \
@@ -62,12 +65,10 @@ RUN \
     mkdir /app && \
     chown www-data:www-data /app && \
     ccm-stop >/dev/nul 2>&1 && \
-    printf '#!/bin/bash\nccm-start && bash; ccm-stop' > /entrypoint.sh && \
-    chmod +x /entrypoint.sh && \
     \
     echo 'Ready.'
 
-COPY nginx.conf /etc/nginx/conf.d/default.conf
+COPY assets/nginx.conf /etc/nginx/conf.d/default.conf
 
 WORKDIR /app
 
