@@ -6,7 +6,7 @@ ENV C5_SUDOAS=www-data
 
 ARG DEBIAN_FRONTEND=noninteractive
 
-ARG PHP_EXTENSIONS="bcmath bz2 curl exif ftp gd gmp imagick intl json ldap mbstring opcache pdo pdo_mysql redis soap ssh2 xml xsl zip"
+ARG PHP_EXTENSIONS="bcmath bz2 curl exif ftp gd gmp imagick imap intl json ldap mbstring opcache pdo pdo_mysql redis soap ssh2 xml xsl zip"
 
 COPY --from=mlocati/php-extension-installer /usr/bin/install-php-extensions /usr/local/bin/
 COPY assets/ccm-start /usr/local/bin/
