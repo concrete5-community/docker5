@@ -20,8 +20,8 @@ EXPOSE 80
 
 RUN \
     echo '### Updating system' && \
-    apt-get update -q && \
-    apt-get upgrade -yq && \
+    apt-get update -qq && \
+    apt-get upgrade -yqq && \
     apt-get autoremove --purge -yqq && \
     apt-get install -yqq gnupg unzip sudo apt-transport-https && \
     \
@@ -44,7 +44,7 @@ RUN \
     APT_KEY_DONT_WARN_ON_DANGEROUS_USAGE=1 apt-key add nginx_signing.key && \
     rm nginx_signing.key && \
     echo "deb https://nginx.org/packages/debian/ $(. /etc/os-release; printf '%s' "$VERSION" | cut -d\( -f2 | cut -d\) -f1) nginx" >/etc/apt/sources.list.d/nginx.list && \
-    apt-get update -q && \
+    apt-get update -yqq && \
     apt-get install -yqq nginx && \
     \
     echo '### Configuring PHP' && \
