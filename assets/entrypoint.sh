@@ -1,3 +1,4 @@
 #!/bin/bash
 
-ccm-start && bash; ccm-stop
+ccm-start && bash
+ccm-stop
