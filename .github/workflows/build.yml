@@ -23,7 +23,7 @@ jobs:
         with:
           fetch-depth: 1
       - name: Build
-        run: docker build --build-arg CCM_PHP_VERSION=${{ matrix.php_version }} --file ./assets/Dockerfile.base --force-rm --rm --tag mlocati/docker5:base-${{ matrix.php_version }} ./assets
+        run: docker build --build-arg CCM_PHP_VERSION=${{ matrix.php_version }} --file ./Dockerfile.base --force-rm --rm --tag mlocati/docker5:base-${{ matrix.php_version }} .
       - name: Save base Docker image
         if: github.event_name != 'push' || github.ref != 'refs/heads/master'
         run: |

@@ -6,11 +6,13 @@ ENV C5_SUDOAS=www-data
 
 ARG DEBIAN_FRONTEND=noninteractive
 
-ARG PHP_EXTENSIONS="gd pdo_mysql zip"
+ARG PHP_EXTENSIONS="bcmath bz2 curl exif ftp gd gmp imagick intl json ldap mbstring opcache pdo pdo_mysql redis soap ssh2 xml xsl zip"
 
 COPY --from=mlocati/php-extension-installer /usr/bin/install-php-extensions /usr/local/bin/
-COPY ccm-start /usr/local/bin/
-COPY ccm-stop /usr/local/bin/
+COPY assets/ccm-start /usr/local/bin/
+COPY assets/ccm-stop /usr/local/bin/
+COPY assets/entrypoint.sh /
+
 ADD https://raw.githubusercontent.com/concrete5/cli/master/c5 /usr/local/bin/
 ADD https://raw.githubusercontent.com/concrete5/cli/master/composerpkg /usr/local/bin/
 
@@ -18,8 +20,8 @@ EXPOSE 80
 
 RUN \
     echo '### Updating system' && \
-    apt-get update -q && \
-    apt-get upgrade -yq && \
+    apt-get update -qq && \
+    apt-get upgrade -yqq && \
     apt-get autoremove --purge -yqq && \
     apt-get install -yqq gnupg unzip sudo apt-transport-https && \
     \
@@ -29,6 +31,7 @@ RUN \
         /usr/local/bin/ccm-stop \
         /usr/local/bin/c5 \
         /usr/local/bin/composerpkg \
+        /entrypoint.sh \
         && \
     \
     echo '### Installing MariaDB' && \
@@ -41,7 +44,7 @@ RUN \
     APT_KEY_DONT_WARN_ON_DANGEROUS_USAGE=1 apt-key add nginx_signing.key && \
     rm nginx_signing.key && \
     echo "deb https://nginx.org/packages/debian/ $(. /etc/os-release; printf '%s' "$VERSION" | cut -d\( -f2 | cut -d\) -f1) nginx" >/etc/apt/sources.list.d/nginx.list && \
-    apt-get update -q && \
+    apt-get update -yqq && \
     apt-get install -yqq nginx && \
     \
     echo '### Configuring PHP' && \
@@ -61,13 +64,12 @@ RUN \
     echo '### Final operations' && \
     mkdir /app && \
     chown www-data:www-data /app && \
-    ccm-stop >/dev/nul 2>&1 && \
-    printf '#!/bin/bash\nccm-start && bash; ccm-stop' > /entrypoint.sh && \
-    chmod +x /entrypoint.sh && \
+    ccm-stop && \
     \
     echo 'Ready.'
 
-COPY nginx.conf /etc/nginx/conf.d/default.conf
+COPY assets/nginx.conf /etc/nginx/conf.d/default.conf
+COPY assets/php-fpm.conf /usr/local/etc/php-fpm.d/custom.conf
 
 WORKDIR /app
 
