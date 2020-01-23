@@ -1,0 +1,177 @@
+#!/bin/sh
+set -o nounset
+set -o errexit
+
+script_name=$0
+
+exitWithSyntax() {
+    printf 'Syntax: %s <start|restart|stop> [db] [web] [nginx] [php-fpm|php|fpm]\n\nStart/restart/stop the database and the webserver services.\n\n' "$script_name" >&2
+    exit 1
+}
+
+isMariaDBRunning() {
+    mysqladmin status -s >/dev/null 2>&1 && return 0 || return 1
+}
+
+isNginxRunning() {
+    service nginx status >/dev/null 2>&1 && return 0 || return 1
+}
+
+isPhpFpmRunning() {
+    lsof -iTCP:9000 >/dev/null 2>&1 && return 0 || return 1
+}
+
+operation=
+do_all=1
+do_mariadb=0
+do_nginx=0
+do_phpfpm=0
+while :; do
+    if test $# -lt 1; then
+	    break
+    fi
+    case "$1" in
+        start | stop | restart)
+            if test "$operation" != ''; then
+                exitWithSyntax
+            fi
+            operation=$1
+            ;;
+        db)
+            do_all=0
+            do_mariadb=1
+            ;;
+        web)
+            do_all=0
+            do_nginx=1
+            do_phpfpm=1
+            ;;
+        nginx)
+            do_all=0
+            do_nginx=1
+            ;;
+        php-fpm | php | fpm)
+            do_all=0
+            do_phpfpm=1
+            ;;
+        *)
+            exitWithSyntax
+            ;;
+    esac
+    shift
+done
+if test "$operation" = ''; then
+    exitWithSyntax
+fi
+do_mariadb=$((do_mariadb + do_all))
+do_nginx=$((do_nginx + do_all))
+do_phpfpm=$((do_phpfpm + do_all))
+rc=0
+
+if test $do_mariadb -ne 0; then
+    if test "$operation" != 'start'; then
+        printf 'Stopping MariaDB... '
+        if isMariaDBRunning; then
+            if mysqladmin shutdown >/dev/null; then
+                printf 'done.\n'
+            else
+                printf '\nFAILED!.\n' >&2
+                rc=1
+            fi
+        else
+            printf 'not running.\n'
+        fi
+    fi
+    if test "$operation" != 'stop'; then
+        printf 'Starting MariaDB... '
+        if isMariaDBRunning; then
+            printf 'already running.\n'
+        else
+            /bin/sh -c '/usr/bin/mysqld_safe >/var/log/mysqld_safe.log 2>&1 &' >/var/log/mysqld_safe.log 2>&1
+            for i in $(seq 1 31); do
+                if test $i -eq 31; then
+                    printf '\n'
+                    cat /var/log/mysqld_safe.log >&2
+                    printf '\nFAILED!.\n' >&2
+                    rc=1
+                    break
+                fi
+                sleep 1
+                if isMariaDBRunning; then
+                    printf 'done.\n'
+                    break
+                fi
+            done
+        fi
+    fi
+fi
+
+if test $do_nginx -ne 0; then
+    if test "$operation" != 'start'; then
+        printf 'Stopping Nginx... '
+        if isNginxRunning; then
+            if service nginx stop >/dev/null; then
+                printf 'done.\n'
+            else
+                printf '\nFAILED!.\n' >&2
+                rc=1
+            fi
+        else
+            printf 'not running.\n'
+        fi
+    fi
+    if test "$operation" != 'stop'; then
+        printf 'Starting Nginx... '
+        if isNginxRunning; then
+            printf 'already running.\n'
+        else
+            if service nginx start >/dev/null; then
+                printf 'done.\n'
+            else
+                printf '\nFAILED!.\n' >&2
+                rc=1
+            fi
+        fi
+    fi
+fi
+
+if test $do_phpfpm -ne 0; then
+    if test "$operation" != 'start'; then
+        printf 'Stopping PHP-FPM... '
+        LSOF_OUT="$(lsof -iTCP:9000 2>&1 || true)"
+        if test -z "$LSOF_OUT"; then
+            printf 'not running.\n'
+        else
+            IFS='
+ ' LSOF_PID=$(printf %s "$LSOF_OUT" | awk 'NR > 1 {print $2}')
+            if kill -s3 $LSOF_PID; then
+                printf 'done.\n'
+            else
+                printf '\nFAILED!.\n' >&2
+                rc=1
+            fi
+        fi
+    fi
+    if test "$operation" != 'stop'; then
+        printf 'Starting PHP-FPM... '
+        if isPhpFpmRunning; then
+            printf 'already running.\n'
+        else
+            /bin/sh -c 'php-fpm >/var/log/php-fpm-log 2>&1 &' >/var/log/php-fpm-log 2>&1
+            for i in $(seq 1 31); do
+                if test $i -eq 31; then
+                    cat /var/log/php-fpm-log >&2
+                    printf '\nFAILED!.\n' >&2
+                    rc=1
+                    break
+                fi
+                if isPhpFpmRunning; then
+                    printf 'done.\n'
+                    break
+                fi
+            done
+        fi
+    fi
+fi
+
+exit $rc

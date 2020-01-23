@@ -1,4 +1,4 @@
 #!/bin/bash
 
-ccm-start && bash
-ccm-stop
+ccm-service start && bash
+ccm-service stop
