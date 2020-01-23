@@ -9,8 +9,7 @@ ARG DEBIAN_FRONTEND=noninteractive
 ARG PHP_EXTENSIONS="bcmath bz2 curl exif ftp gd gmp imagick imap intl json ldap mbstring opcache pdo pdo_mysql redis soap ssh2 xml xsl zip"
 
 COPY --from=mlocati/php-extension-installer /usr/bin/install-php-extensions /usr/local/bin/
-COPY assets/ccm-start /usr/local/bin/
-COPY assets/ccm-stop /usr/local/bin/
+COPY assets/ccm-service /usr/local/bin/
 COPY assets/entrypoint.sh /
 
 ADD https://raw.githubusercontent.com/concrete5/cli/master/c5 /usr/local/bin/
@@ -27,8 +26,7 @@ RUN \
     \
     echo '### Configuring helper commands' && \
     chmod 0755 \
-        /usr/local/bin/ccm-start \
-        /usr/local/bin/ccm-stop \
+        /usr/local/bin/ccm-service \
         /usr/local/bin/c5 \
         /usr/local/bin/composerpkg \
         /entrypoint.sh \
@@ -37,7 +35,6 @@ RUN \
     echo '### Installing MariaDB' && \
     curl -sSL https://downloads.mariadb.com/MariaDB/mariadb_repo_setup | bash -s -- --skip-maxscale && \
     apt-get install -yqq mariadb-server && \
-    /bin/sh -c '/usr/bin/mysqld_safe >/dev/null 2>&1 &' && \
     \
     echo '### Installing Nginx' && \
     curl -sSL -o nginx_signing.key https://nginx.org/keys/nginx_signing.key && \
@@ -59,12 +56,13 @@ RUN \
     sudo -u www-data -- composer clear-cache && \
     \
     echo '### Configuring database' && \
+    ccm-service start db && \
     echo "CREATE USER 'c5'@'localhost' IDENTIFIED BY '12345'; CREATE DATABASE c5 COLLATE 'utf8mb4_unicode_ci'; GRANT ALL PRIVILEGES ON c5.* TO 'c5'@'localhost'; FLUSH PRIVILEGES;" | mysql && \
     \
     echo '### Final operations' && \
     mkdir /app && \
     chown www-data:www-data /app && \
-    ccm-stop && \
+    ccm-service stop && \
     \
     echo 'Ready.'
 

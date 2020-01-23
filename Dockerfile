@@ -7,7 +7,7 @@ ARG CCM_STARTING_POINT=elemental_full
 
 RUN \
     cd /app && \
-    ccm-start && \
+    ccm-service start db && \
     if test "${CCM_C5_ARCHIVE##*.}" = 'gz'; then \
         curl -sSL "$CCM_C5_ARCHIVE" | sudo -u www-data -- tar xz --strip 1; \
     else \
@@ -33,5 +33,5 @@ RUN \
         --admin-password=12345 \
         && \
     \
-    ccm-stop && \
+    ccm-service stop db && \
     echo 'Ready.'
