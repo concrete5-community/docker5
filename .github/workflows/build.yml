@@ -57,13 +57,27 @@ jobs:
             c5_startingpoint: elemental_full
             image_tag: develop-full
           - php_version: "7.2"
+            c5_archive: https://github.com/concrete5/concrete5/archive/develop.tar.gz
+            c5_startingpoint: elemental_blank
+            image_tag: develop
+          - php_version: "7.2"
             c5_archive: https://www.concrete5.org/download_file/-/view/111592/8497/
             c5_startingpoint: elemental_full
             image_tag: 8.5.2-full
+            additional_tag: latest-full
+          - php_version: "7.2"
+            c5_archive: https://www.concrete5.org/download_file/-/view/111592/8497/
+            c5_startingpoint: elemental_blank
+            image_tag: 8.5.2
+            additional_tag: latest
           - php_version: "5.6"
             c5_archive: https://www.concrete5.org/download_file/-/view/93075/8497/
             c5_startingpoint: elemental_full
             image_tag: 5.7.5.13-full
+          - php_version: "5.6"
+            c5_archive: https://www.concrete5.org/download_file/-/view/93075/8497/
+            c5_startingpoint: elemental_blank
+            image_tag: 5.7.5.13
     name: concrete5 ${{ matrix.data.image_tag }}
     steps:
       - name: Checkout
@@ -80,7 +94,11 @@ jobs:
         if: github.event_name != 'push' || github.ref != 'refs/heads/master'
         run: docker load --input /tmp/base-image-${{ matrix.data.php_version }}/image.tgz
       - name: Build with starting point ${{ matrix.data.c5_startingpoint }}
-        run: docker build --build-arg CCM_PHP_VERSION=${{ matrix.data.php_version }} --build-arg CCM_C5_ARCHIVE=${{ matrix.data.c5_archive }} --build-arg CCM_STARTING_POINT=${{ matrix.data.c5_startingpoint }} --file ./Dockerfile --tag mlocati/docker5:${{ matrix.data.image_tag }} .
+        run: |
+          docker build --build-arg CCM_PHP_VERSION=${{ matrix.data.php_version }} --build-arg CCM_C5_ARCHIVE=${{ matrix.data.c5_archive }} --build-arg CCM_STARTING_POINT=${{ matrix.data.c5_startingpoint }} --file ./Dockerfile --tag mlocati/docker5:${{ matrix.data.image_tag }} .
+          if test -n "${{ matrix.data.additional_tag }}"; then
+            docker tag mlocati/docker5:${{ matrix.data.image_tag }} mlocati/docker5:${{ matrix.data.additional_tag }}
+          fi
       - name: Docker Hub login
         if: github.event_name == 'push' && github.ref == 'refs/heads/master'
         uses: actions-hub/docker/login@master
@@ -92,3 +110,8 @@ jobs:
         uses: actions-hub/docker@master
         with:
           args: push mlocati/docker5:${{ matrix.data.image_tag }}
+      - name: Publish on Docker Hub
+        if: github.event_name == 'push' && github.ref == 'refs/heads/master' && matrix.data.additional_tag
+        uses: actions-hub/docker@master
+        with:
+          args: push mlocati/docker5:${{ matrix.data.additional_tag }}
