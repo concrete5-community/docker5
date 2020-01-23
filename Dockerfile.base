@@ -22,7 +22,7 @@ RUN \
     apt-get update -qq && \
     apt-get upgrade -yqq && \
     apt-get autoremove --purge -yqq && \
-    apt-get install -yqq gnupg unzip sudo apt-transport-https && \
+    apt-get install -yqq gnupg unzip sudo apt-transport-https git && \
     \
     echo '### Configuring helper commands' && \
     chmod 0755 \
