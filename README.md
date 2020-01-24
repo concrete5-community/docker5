@@ -18,6 +18,7 @@ You can then install the package through the web interface or through the CLI in
 ## References
 
 Pre-compiled images: https://hub.docker.com/r/mlocati/docker5
+
 Source repository: https://github.com/concrete5-community/docker5
 
 ## Configuration parameters
