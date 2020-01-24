@@ -1,10 +1,8 @@
 # Docker images with ready-to use concrete5
 
-This is the source repository for the Docker images hosted at [https://hub.docker.com/r/mlocati/docker5/](https://hub.docker.com/r/mlocati/docker5/).
+Docker images that provide pre-installed concrete5 instances without the hassle of configuring them.
 
-They are really useful if you want to run a concrete5 instance without the hassle of configuring it.
-
-For example, if you want to test your concrete5 package with concrete5 8.5.2, you can simply run this command:
+Example: if you want to test your concrete5 package with concrete5 8.5.2, you can simply run this command:
 
 ```bash
 docker run --rm -it -p 8080:80 -v /path/to/your/package:/app/packages/package_handle mlocati/docker5:8.5.2-full
@@ -16,6 +14,11 @@ Where:
 - `package_handle` is the handle of the package
 
 You can then install the package through the web interface or through the CLI interface (`c5 c5:package:install package_handle`).
+
+## References
+
+Pre-compiled images: https://hub.docker.com/r/mlocati/docker5
+Source repository: https://github.com/concrete5-community/docker5
 
 ## Configuration parameters
 

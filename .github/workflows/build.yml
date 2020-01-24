@@ -23,7 +23,7 @@ jobs:
         with:
           fetch-depth: 1
       - name: Build
-        run: docker build --build-arg CCM_PHP_VERSION=${{ matrix.php_version }} --file ./Dockerfile.base --force-rm --rm --tag mlocati/docker5:base-${{ matrix.php_version }} .
+        run: docker build --build-arg CCM_PHP_VERSION=${{ matrix.php_version }} --force-rm --rm --tag mlocati/docker5:base-${{ matrix.php_version }} ./base
       - name: Save base Docker image
         if: github.event_name != 'push' || github.ref != 'refs/heads/master'
         run: |
@@ -95,7 +95,7 @@ jobs:
         run: docker load --input /tmp/base-image-${{ matrix.data.php_version }}/image.tgz
       - name: Build with starting point ${{ matrix.data.c5_startingpoint }}
         run: |
-          docker build --build-arg CCM_PHP_VERSION=${{ matrix.data.php_version }} --build-arg CCM_C5_ARCHIVE=${{ matrix.data.c5_archive }} --build-arg CCM_STARTING_POINT=${{ matrix.data.c5_startingpoint }} --file ./Dockerfile --tag mlocati/docker5:${{ matrix.data.image_tag }} .
+          docker build --build-arg CCM_PHP_VERSION=${{ matrix.data.php_version }} --build-arg CCM_C5_ARCHIVE=${{ matrix.data.c5_archive }} --build-arg CCM_STARTING_POINT=${{ matrix.data.c5_startingpoint }} --tag mlocati/docker5:${{ matrix.data.image_tag }} ./installed
           if test -n "${{ matrix.data.additional_tag }}"; then
             docker tag mlocati/docker5:${{ matrix.data.image_tag }} mlocati/docker5:${{ matrix.data.additional_tag }}
           fi
