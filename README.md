@@ -5,7 +5,7 @@ Docker images that provide pre-installed concrete5 instances without the hassle 
 Example: if you want to test your concrete5 package with concrete5 8.5.2, you can simply run this command:
 
 ```bash
-docker run --rm -it -p 8080:80 -v /path/to/your/package:/app/packages/package_handle mlocati/docker5:8.5.2-full
+docker run --rm -it -p 8080:80 -p 33306:3306 -v /path/to/your/package:/app/packages/package_handle mlocati/docker5:8.5.2-full
 ```
 
 Where:
@@ -27,3 +27,5 @@ Source repository: https://github.com/concrete5-community/docker5
 - Name of the concrete5 database: `c5`
 - Database user name: `c5`
 - Database user password: `12345`
+- Exposed port for the website: `80`
+- Exposed port for the database: `3306`

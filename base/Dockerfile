@@ -16,6 +16,7 @@ ADD https://raw.githubusercontent.com/concrete5/cli/master/c5 /usr/local/bin/
 ADD https://raw.githubusercontent.com/concrete5/cli/master/composerpkg /usr/local/bin/
 
 EXPOSE 80
+EXPOSE 3306
 
 RUN \
     echo '### Updating system' && \
@@ -56,8 +57,9 @@ RUN \
     sudo -u www-data -- composer clear-cache && \
     \
     echo '### Configuring database' && \
+    sed -i -r 's/^(\s*bind-address\s*=\s*)127\.0\.0\.1(\s*)$/\10.0.0.0\2/' /etc/mysql/my.cnf && \
     ccm-service start db && \
-    echo "CREATE USER 'c5'@'localhost' IDENTIFIED BY '12345'; CREATE DATABASE c5 COLLATE 'utf8mb4_unicode_ci'; GRANT ALL PRIVILEGES ON c5.* TO 'c5'@'localhost'; FLUSH PRIVILEGES;" | mysql && \
+    echo "CREATE USER 'c5'@'%' IDENTIFIED BY '12345'; CREATE DATABASE c5 COLLATE 'utf8mb4_unicode_ci'; GRANT ALL PRIVILEGES ON c5.* TO 'c5'@'%'; FLUSH PRIVILEGES;" | mysql && \
     \
     echo '### Final operations' && \
     mkdir /app && \
