@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        php_version: ["5.6", "7.2"]
+        php_version: ["5.5", "7.2"]
     name: Base image with PHP ${{ matrix.php_version }}
     steps:
       - name: Environment info
@@ -70,11 +70,11 @@ jobs:
             c5_startingpoint: elemental_blank
             image_tag: 8.5.2
             additional_tag: latest
-          - php_version: "5.6"
+          - php_version: "5.5"
             c5_archive: https://www.concrete5.org/download_file/-/view/93075/8497/
             c5_startingpoint: elemental_full
             image_tag: 5.7.5.13-full
-          - php_version: "5.6"
+          - php_version: "5.5"
             c5_archive: https://www.concrete5.org/download_file/-/view/93075/8497/
             c5_startingpoint: elemental_blank
             image_tag: 5.7.5.13
