@@ -17,6 +17,7 @@ ADD https://raw.githubusercontent.com/concrete5/cli/master/composerpkg /usr/loca
 
 EXPOSE 80
 EXPOSE 3306
+EXPOSE 9000
 
 RUN \
     echo '### Updating system' && \
