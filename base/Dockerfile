@@ -53,8 +53,8 @@ RUN \
     curl -sSL https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer && \
     mkdir -p /var/www/.composer && \
     chown -R www-data:www-data /var/www/.composer && \
-    sudo -u www-data -- composer global require hirak/prestissimo && \
-    sudo -u www-data -- composer clear-cache && \
+    (sudo -u www-data -- composer global require hirak/prestissimo || true) && \
+    (sudo -u www-data -- composer clear-cache || true) && \
     \
     echo '### Configuring database' && \
     sed -i -r 's/^(\s*bind-address\s*=\s*)127\.0\.0\.1(\s*)$/\10.0.0.0\2/' /etc/mysql/my.cnf && \
