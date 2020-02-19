@@ -99,6 +99,9 @@ jobs:
           if test -n "${{ matrix.data.additional_tag }}"; then
             docker tag mlocati/docker5:${{ matrix.data.image_tag }} mlocati/docker5:${{ matrix.data.additional_tag }}
           fi
+      - name: Check that MariaDB works
+        run: |
+          docker run --rm --entrypoint='' mlocati/docker5:${{ matrix.data.image_tag }} ccm-service start db
       - name: Docker Hub login
         if: github.event_name == 'push' && github.ref == 'refs/heads/master'
         uses: actions-hub/docker/login@master
