@@ -11,6 +11,7 @@ ARG PHP_EXTENSIONS="bcmath bz2 curl exif ftp gd gmp imagick imap intl json ldap 
 COPY --from=mlocati/php-extension-installer /usr/bin/install-php-extensions /usr/local/bin/
 COPY assets/ccm-service /usr/local/bin/
 COPY assets/entrypoint.sh /
+COPY assets/bashrc /root/.bashrc
 
 ADD https://raw.githubusercontent.com/concrete5/cli/master/c5 /usr/local/bin/
 ADD https://raw.githubusercontent.com/concrete5/cli/master/composerpkg /usr/local/bin/
