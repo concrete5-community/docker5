@@ -174,4 +174,6 @@ if test $do_phpfpm -ne 0; then
     fi
 fi
 
+sync || true
+
 exit $rc
