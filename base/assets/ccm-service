@@ -3,10 +3,26 @@ set -o nounset
 set -o errexit
 
 script_name=$0
+php_major_minor=
+php_major_minor_int=
 
 exitWithSyntax() {
-    printf 'Syntax: %s <start|restart|stop> [db] [web] [nginx] [php-fpm|php|fpm]\n\nStart/restart/stop the database and the webserver services.\n\n' "$script_name" >&2
+    printf 'Syntax: %s <start|restart|stop|status> [db] [web] [nginx] [php-fpm|php|fpm]\n\nStart/restart/stop the database and the webserver services, or check if they are running.\nIf you specify "status", the returned code will be 0 if the services are running, 1 otherwise.\n' "$script_name" >&2
     exit 1
+}
+
+getPhpMajorMinor() {
+    if test -z "$php_major_minor"; then
+        php_major_minor="$(php -n -r "echo PHP_MAJOR_VERSION, '.', PHP_MINOR_VERSION;")"
+    fi
+    printf '%s' "$php_major_minor"
+}
+
+getPhpMajorMinorInt() {
+    if test -z "$php_major_minor_int"; then
+        php_major_minor_int="$(php -n -r "echo PHP_MAJOR_VERSION, PHP_MINOR_VERSION;")"
+    fi
+    printf '%s' "$php_major_minor_int"
 }
 
 isMariaDBRunning() {
@@ -18,7 +34,7 @@ isNginxRunning() {
 }
 
 isPhpFpmRunning() {
-    lsof -iTCP:9000 >/dev/null 2>&1 && return 0 || return 1
+    service php$(getPhpMajorMinor)-fpm status >/dev/null 2>&1 && return 0 || return 1
 }
 
 operation=
@@ -28,10 +44,10 @@ do_nginx=0
 do_phpfpm=0
 while :; do
     if test $# -lt 1; then
-	    break
+        break
     fi
     case "$1" in
-        start | stop | restart)
+        start | stop | restart | status)
             if test "$operation" != ''; then
                 exitWithSyntax
             fi
@@ -67,6 +83,37 @@ do_mariadb=$((do_mariadb + do_all))
 do_nginx=$((do_nginx + do_all))
 do_phpfpm=$((do_phpfpm + do_all))
 rc=0
+
+if test $operation = 'status'; then
+    if test $do_mariadb -ne 0; then
+        printf 'MariaDB running: '
+        if isMariaDBRunning; then
+            printf 'yes.\n'
+        else
+            printf 'no.\n'
+            rc=1
+        fi
+    fi
+    if test $do_nginx -ne 0; then
+        printf 'Nginx running: '
+        if isNginxRunning; then
+            printf 'yes.\n'
+        else
+            printf 'no.\n'
+            rc=1
+        fi
+    fi
+    if test $do_phpfpm -ne 0; then
+        printf 'PHP-FPM running: '
+        if isPhpFpmRunning; then
+            printf 'yes.\n'
+        else
+            printf 'no.\n'
+            rc=1
+        fi
+    fi
+    exit $rc
+fi
 
 if test $do_mariadb -ne 0; then
     if test "$operation" != 'start'; then
@@ -138,18 +185,16 @@ fi
 if test $do_phpfpm -ne 0; then
     if test "$operation" != 'start'; then
         printf 'Stopping PHP-FPM... '
-        LSOF_OUT="$(lsof -iTCP:9000 2>&1 || true)"
-        if test -z "$LSOF_OUT"; then
-            printf 'not running.\n'
-        else
-            IFS='
- ' LSOF_PID=$(printf %s "$LSOF_OUT" | awk 'NR > 1 {print $2}')
-            if kill -s3 $LSOF_PID; then
+        if isPhpFpmRunning; then
+            if service php$(getPhpMajorMinor)-fpm stop; then
+                /usr/lib/php/php-fpm-socket-helper remove /run/php/php-fpm.sock /etc/php/$(getPhpMajorMinor)/fpm/pool.d/www.conf $(getPhpMajorMinorInt)
                 printf 'done.\n'
             else
                 printf '\nFAILED!.\n' >&2
                 rc=1
             fi
+        else
+            printf 'not running.\n'
         fi
     fi
     if test "$operation" != 'stop'; then
@@ -157,19 +202,16 @@ if test $do_phpfpm -ne 0; then
         if isPhpFpmRunning; then
             printf 'already running.\n'
         else
-            /bin/sh -c 'php-fpm >/var/log/php-fpm-log 2>&1 &' >/var/log/php-fpm-log 2>&1
-            for i in $(seq 1 31); do
-                if test $i -eq 31; then
-                    cat /var/log/php-fpm-log >&2
-                    printf '\nFAILED!.\n' >&2
-                    rc=1
-                    break
-                fi
-                if isPhpFpmRunning; then
+            if service php$(getPhpMajorMinor)-fpm start; then
+                if /usr/lib/php/php-fpm-socket-helper install /run/php/php-fpm.sock /etc/php/$(getPhpMajorMinor)/fpm/pool.d/www.conf $(getPhpMajorMinorInt); then
                     printf 'done.\n'
-                    break
+                else
+                    printf '\nFAILED!.\n' >&2
                 fi
-            done
+            else
+                printf '\nFAILED!.\n' >&2
+                rc=1
+            fi
         fi
     fi
 fi
