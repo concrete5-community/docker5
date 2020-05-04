@@ -42,5 +42,6 @@ RUN \
     c5 c5:config set -g concrete.seo.url_rewriting true && \
     \
     printf '## Final operations\n' && \
+    c5 c5:clear-cache && \
     ccm-service stop db && \
     echo 'Ready.'
