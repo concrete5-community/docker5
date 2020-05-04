@@ -98,7 +98,7 @@ RUN \
     \
     echo 'Ready.'
 
-COPY assets/nginx.conf /etc/nginx/sites-enabled/default
+COPY assets/nginx.conf /etc/nginx/sites-available/default
 
 WORKDIR /app
 
