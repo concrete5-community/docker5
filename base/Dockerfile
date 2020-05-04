@@ -1,15 +1,17 @@
-ARG CCM_PHP_VERSION=7.2
-
-FROM php:${CCM_PHP_VERSION}-fpm
+FROM ubuntu:18.04
 
 ENV C5_SUDOAS=www-data
 
 ARG DEBIAN_FRONTEND=noninteractive
 
-ARG PHP_EXTENSIONS="bcmath bz2 curl exif ftp gd gmp imagick imap intl json ldap mbstring opcache pdo pdo_mysql redis soap ssh2 xml xsl zip"
+ARG ONDREJPHP_KEY="4F4EA0AAE5267A6C"
+ARG ONDRENGINX_KEY="4F4EA0AAE5267A6C"
+ARG PHP_VERSIONS="5.6 7.2 7.4"
+ARG PHP_EXTENSIONS_VSPECIFIC="bcmath bz2 curl exif ftp gd gmp imagick imap intl json ldap mbstring mysql opcache pdo soap ssh2 xml xsl zip"
+ARG PHP_EXTENSIONS_COMMON="php-redis"
 
-COPY --from=mlocati/php-extension-installer /usr/bin/install-php-extensions /usr/local/bin/
 COPY assets/ccm-service /usr/local/bin/
+COPY assets/switch-php /usr/local/bin/
 COPY assets/entrypoint.sh /
 COPY assets/bashrc /root/.bashrc
 
@@ -25,42 +27,62 @@ RUN \
     apt-get update -qq && \
     apt-get upgrade -yqq && \
     apt-get autoremove --purge -yqq && \
-    apt-get install -yqq gnupg unzip sudo apt-transport-https git && \
+    apt-get install -yqq apt-transport-https curl git gnupg2 sudo unzip && \
+    echo 'Set disable_coredump false' >> /etc/sudo.conf && \
     \
     echo '### Configuring helper commands' && \
     chmod 0755 \
         /usr/local/bin/ccm-service \
+        /usr/local/bin/switch-php \
         /usr/local/bin/c5 \
         /usr/local/bin/composerpkg \
         /entrypoint.sh \
         && \
     \
+    echo '### Installing PHP FPM' && \
+    printf 'deb http://ppa.launchpad.net/ondrej/php/ubuntu %s main\n' "$(. /etc/os-release && echo $VERSION_CODENAME)" >/etc/apt/sources.list.d/ondrej-php.list && \
+    APT_KEY_DONT_WARN_ON_DANGEROUS_USAGE=1 apt-key adv --keyserver keyserver.ubuntu.com --recv-keys $ONDREJPHP_KEY && \
+    apt-get update -qq && \
+    APT_PACKAGES='' && \
+    for PHP_VERSION in $PHP_VERSIONS; do \
+        APT_PACKAGES="$APT_PACKAGES php$PHP_VERSION-fpm"; \
+        for PHP_EXTENSION in $PHP_EXTENSIONS_VSPECIFIC; do \
+            APT_PACKAGES="$APT_PACKAGES php$PHP_VERSION-$PHP_EXTENSION"; \
+        done \
+    done; \
+    APT_PACKAGES="$APT_PACKAGES $PHP_EXTENSIONS_COMMON" && \
+    apt-get install -yqq $APT_PACKAGES && \
+    unset APT_PACKAGES && \
+    unset PHP_VERSION && \
+    unset PHP_EXTENSION && \
+    \
+    echo '### Installing NodeJS' && \
+    curl -sSL https://deb.nodesource.com/setup_12.x | bash - && \
+    apt-get install -yqq nodejs && \
+    npm -g install grunt-cli && \
+    \
     echo '### Installing MariaDB' && \
-    curl -sSL https://downloads.mariadb.com/MariaDB/mariadb_repo_setup | bash -s -- --skip-maxscale && \
+    curl -sSL https://downloads.mariadb.com/MariaDB/mariadb_repo_setup | bash -s -- --skip-maxscale --mariadb-server-version=mariadb-10.4 && \
     apt-get install -yqq mariadb-server && \
     \
     echo '### Installing Nginx' && \
-    curl -sSL -o nginx_signing.key https://nginx.org/keys/nginx_signing.key && \
-    APT_KEY_DONT_WARN_ON_DANGEROUS_USAGE=1 apt-key add nginx_signing.key && \
-    rm nginx_signing.key && \
-    echo "deb https://nginx.org/packages/debian/ $(. /etc/os-release; printf '%s' "$VERSION" | cut -d\( -f2 | cut -d\) -f1) nginx" >/etc/apt/sources.list.d/nginx.list && \
+    printf 'deb http://ppa.launchpad.net/ondrej/nginx/ubuntu %s main\n' "$(. /etc/os-release && echo $VERSION_CODENAME)" >/etc/apt/sources.list.d/ondrej-nginx.list && \
+    APT_KEY_DONT_WARN_ON_DANGEROUS_USAGE=1 apt-key adv --keyserver keyserver.ubuntu.com --recv-keys $ONDRENGINX_KEY && \
     apt-get update -yqq && \
     apt-get install -yqq nginx && \
     \
-    echo '### Configuring PHP' && \
-    install-php-extensions $PHP_EXTENSIONS && \
-    echo 'pdo_mysql.default_socket=/var/run/mysqld/mysqld.sock' >>/usr/local/etc/php/conf.d/docker-php-ext-pdo_mysql.ini && \
-    \
     echo '### Installing Composer' && \
-    curl -sSL https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer && \
     mkdir -p /var/www/.composer && \
     chown -R www-data:www-data /var/www/.composer && \
-    (sudo -u www-data -- composer global require hirak/prestissimo || true) && \
-    (sudo -u www-data -- composer clear-cache || true) && \
+    curl -sSL https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer && \
+    (sudo -H -u www-data -- composer global require hirak/prestissimo || true) && \
+    (sudo -H -u www-data -- composer clear-cache || true) && \
     \
     echo '### Configuring database' && \
     sed -i -r 's/^(\s*bind-address\s*=\s*)127\.0\.0\.1(\s*)$/\10.0.0.0\2/' /etc/mysql/my.cnf && \
     sed -i -r 's/^(\s*innodb_flush_method\s*=\s*)\S.*?(\s*)$/\1fsync\2/' /etc/mysql/my.cnf && \
+    (test -f /etc/mysql/mariadb.conf.d/50-server.cnf && sed -i -r 's/^(\s*bind-address\s*=\s*)127\.0\.0\.1(\s*)$/\10.0.0.0\2/' /etc/mysql/mariadb.conf.d/50-server.cnf || true) && \
+    (test -f /etc/mysql/mariadb.conf.d/50-server.cnf && echo 'innodb_flush_method = fsync' >> /etc/mysql/mariadb.conf.d/50-server.cnf || true) && \
     ccm-service start db && \
     echo "CREATE USER 'c5'@'%' IDENTIFIED BY '12345'; CREATE DATABASE c5 COLLATE 'utf8mb4_unicode_ci'; GRANT ALL PRIVILEGES ON c5.* TO 'c5'@'%'; FLUSH PRIVILEGES;" | mysql && \
     \
@@ -68,11 +90,15 @@ RUN \
     mkdir /app && \
     chown www-data:www-data /app && \
     ccm-service stop && \
+    rm -rf /var/lib/apt/lists/* && \
+    npm cache clean --force && \
+    rm -rf $HOME/.npm/_logs/*.log && \
+    truncate --size=0 /var/log/*.log /var/log/apt/*.log && \
+    rm -rf /var/log/apt/eipp.log.xz && \
     \
     echo 'Ready.'
 
-COPY assets/nginx.conf /etc/nginx/conf.d/default.conf
-COPY assets/php-fpm.conf /usr/local/etc/php-fpm.d/custom.conf
+COPY assets/nginx.conf /etc/nginx/sites-enabled/default
 
 WORKDIR /app
 

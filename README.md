@@ -29,3 +29,36 @@ Source repository: https://github.com/concrete5-community/docker5
 - Database user password: `12345`
 - Exposed port for the website: `80`
 - Exposed port for the database: `3306`
+
+## PHP Versions
+
+Every docker images contains multiple PHP versions: 5.6, 7.2 and 7.4.
+
+When using the default entry point you can override the default one by specifying the CCM_PHP_VERSION environment variable, like this:
+
+```bash
+docker run --rm -e "CCM_PHP_VERSION=7.2" mlocati/docker5:8.5.2-full
+```
+
+From within the container you can use the `switch-php` command:
+
+```bash
+switch-php 7.2
+```
+
+## Starting/stopping services
+
+The default entry point will start the database and web services at startup, and stop them at shutdown.
+
+You can also control them by using the `ccm-service` command to start/stop/restart these services, as well as to determine if they are running.
+
+```bash
+# Start all the services
+ccm-service start
+# Stop all the services
+ccm-service stop
+# Restart only the databse service
+ccm-service restart db
+# Check if the PHP-FPM service and the Nginx services are running
+ccm-service status php-fpm nginx
+```
