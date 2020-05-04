@@ -12,9 +12,28 @@ if ! ccm-service start; then
     exit 1
 fi
 
+rc=0
 if test $# -eq 0; then
-    bash
-    rc=$?
+    if test "${TERM:-}" = 'dumb'; then
+        cat << EOF
+
+Running container until the following command will be executed:
+
+    docker stop $(hostname)
+
+PS: if you see this message, you probably need to run this container
+    with the "-d" (detached) flag: if you hit CTRL-C (or close this
+    terminal window) the container will keep running in background.
+
+EOF
+        trap true TERM INT
+        sleep infinity &
+        wait
+    else
+        echo 'Type "exit" (or CTRL-D) to quit this docker5 container'
+        bash
+        rc=$?
+    fi
 else
     bash -c "$*"
     rc=$?
