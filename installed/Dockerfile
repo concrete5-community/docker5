@@ -5,12 +5,20 @@ ARG CCM_C5_ARCHIVE=https://github.com/concrete5/concrete5/archive/develop.tar.gz
 ARG CCM_STARTING_POINT=elemental_full
 
 RUN \
-    printf '## Configuring environment (with PHP %s)\n' "$CCM_PHP_VERSION" && \
+    echo '' && \
+    echo '###########################'  && \
+    echo '# Configuring environment #'  && \
+    echo '###########################'  && \
+    printf '(PHP version: %s)\n' "$CCM_PHP_VERSION" && \
     switch-php "$CCM_PHP_VERSION" && \
     cd /app && \
     ccm-service start db && \
     \
-    printf '## Downloading and extracting %s\n' "$CCM_C5_ARCHIVE" && \
+    echo '' && \
+    echo '########################################'  && \
+    echo '# Downloading and extracting concrete5 #' && \
+    echo '########################################'  && \
+    printf '(URL: %s)\n' "$CCM_C5_ARCHIVE" && \
     if test "${CCM_C5_ARCHIVE##*.}" = 'gz'; then \
         curl -sSL "$CCM_C5_ARCHIVE" | sudo -u www-data -- tar xz --strip 1; \
     else \
@@ -23,12 +31,18 @@ RUN \
     fi; \
     \
     if ! test -d concrete/vendor; then \
-        printf '## Installing composer dependencies\n' && \
+        echo '' && \
+        echo '####################################' && \
+        echo '# Installing composer dependencies #' && \
+        echo '####################################' && \
         sudo -H -u www-data -- composer install --optimize-autoloader --no-suggest && \
         sudo -H -u www-data -- composer clear-cache; \
     fi; \
     \
-    printf '## Installing concrete5\n' && \
+    echo '' && \
+    echo '########################' && \
+    echo '# Installing concrete5 #' && \
+    echo '########################' && \
     c5 c5:install \
         --db-server=localhost \
         --db-username=c5 \
@@ -41,7 +55,12 @@ RUN \
         && \
     c5 c5:config set -g concrete.seo.url_rewriting true && \
     \
-    printf '## Final operations\n' && \
+    echo '' && \
+    echo '####################' && \
+    echo '# Final operations #' && \
+    echo '####################' && \
     c5 c5:clear-cache && \
     ccm-service stop db && \
+    \
+    echo '' && \
     echo 'Ready.'

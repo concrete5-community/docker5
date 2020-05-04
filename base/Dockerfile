@@ -23,14 +23,20 @@ EXPOSE 3306
 EXPOSE 9000
 
 RUN \
-    echo '### Updating system' && \
+    echo '' && \
+    echo '###################' && \
+    echo '# Updating system #' && \
+    echo '###################' && \
     apt-get update -qq && \
     apt-get upgrade -yqq && \
     apt-get autoremove --purge -yqq && \
     apt-get install -yqq apt-transport-https curl git gnupg2 sudo unzip && \
     echo 'Set disable_coredump false' >> /etc/sudo.conf && \
     \
-    echo '### Configuring helper commands' && \
+    echo '' && \
+    echo '###############################' && \
+    echo '# Configuring helper commands #' && \
+    echo '###############################' && \
     chmod 0755 \
         /usr/local/bin/ccm-service \
         /usr/local/bin/switch-php \
@@ -39,7 +45,10 @@ RUN \
         /entrypoint.sh \
         && \
     \
-    echo '### Installing PHP FPM' && \
+    echo '' && \
+    echo '######################' && \
+    echo '# Installing PHP FPM #' && \
+    echo '######################' && \
     printf 'deb http://ppa.launchpad.net/ondrej/php/ubuntu %s main\n' "$(. /etc/os-release && echo $VERSION_CODENAME)" >/etc/apt/sources.list.d/ondrej-php.list && \
     APT_KEY_DONT_WARN_ON_DANGEROUS_USAGE=1 apt-key adv --keyserver keyserver.ubuntu.com --recv-keys $ONDREJPHP_KEY && \
     apt-get update -qq && \
@@ -56,29 +65,44 @@ RUN \
     unset PHP_VERSION && \
     unset PHP_EXTENSION && \
     \
-    echo '### Installing NodeJS' && \
+    echo '' && \
+    echo '#####################' && \
+    echo '# Installing NodeJS #' && \
+    echo '#####################' && \
     curl -sSL https://deb.nodesource.com/setup_12.x | bash - && \
     apt-get install -yqq nodejs && \
     npm -g install grunt-cli && \
     \
-    echo '### Installing MariaDB' && \
+    echo '' && \
+    echo '######################' && \
+    echo '# Installing MariaDB #' && \
+    echo '######################' && \
     curl -sSL https://downloads.mariadb.com/MariaDB/mariadb_repo_setup | bash -s -- --skip-maxscale --mariadb-server-version=mariadb-10.4 && \
     apt-get install -yqq mariadb-server && \
     \
-    echo '### Installing Nginx' && \
+    echo '' && \
+    echo '####################' && \
+    echo '# Installing Nginx #' && \
+    echo '####################' && \
     printf 'deb http://ppa.launchpad.net/ondrej/nginx/ubuntu %s main\n' "$(. /etc/os-release && echo $VERSION_CODENAME)" >/etc/apt/sources.list.d/ondrej-nginx.list && \
     APT_KEY_DONT_WARN_ON_DANGEROUS_USAGE=1 apt-key adv --keyserver keyserver.ubuntu.com --recv-keys $ONDRENGINX_KEY && \
     apt-get update -yqq && \
     apt-get install -yqq nginx && \
     \
-    echo '### Installing Composer' && \
+    echo '' && \
+    echo '#######################' && \
+    echo '# Installing Composer #' && \
+    echo '#######################' && \
     mkdir -p /var/www/.composer && \
     chown -R www-data:www-data /var/www/.composer && \
     curl -sSL https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer && \
     (sudo -H -u www-data -- composer global require hirak/prestissimo || true) && \
     (sudo -H -u www-data -- composer clear-cache || true) && \
     \
-    echo '### Configuring database' && \
+    echo '' && \
+    echo '########################' && \
+    echo '# Configuring database #' && \
+    echo '########################' && \
     sed -i -r 's/^(\s*bind-address\s*=\s*)127\.0\.0\.1(\s*)$/\10.0.0.0\2/' /etc/mysql/my.cnf && \
     sed -i -r 's/^(\s*innodb_flush_method\s*=\s*)\S.*?(\s*)$/\1fsync\2/' /etc/mysql/my.cnf && \
     (test -f /etc/mysql/mariadb.conf.d/50-server.cnf && sed -i -r 's/^(\s*bind-address\s*=\s*)127\.0\.0\.1(\s*)$/\10.0.0.0\2/' /etc/mysql/mariadb.conf.d/50-server.cnf || true) && \
@@ -86,7 +110,10 @@ RUN \
     ccm-service start db && \
     echo "CREATE USER 'c5'@'%' IDENTIFIED BY '12345'; CREATE DATABASE c5 COLLATE 'utf8mb4_unicode_ci'; GRANT ALL PRIVILEGES ON c5.* TO 'c5'@'%'; FLUSH PRIVILEGES;" | mysql && \
     \
-    echo '### Final operations' && \
+    echo '' && \
+    echo '####################' && \
+    echo '# Final operations #' && \
+    echo '####################' && \
     mkdir /app && \
     chown www-data:www-data /app && \
     ccm-service stop && \
@@ -96,6 +123,7 @@ RUN \
     truncate --size=0 /var/log/*.log /var/log/apt/*.log && \
     rm -rf /var/log/apt/eipp.log.xz && \
     \
+    echo '' && \
     echo 'Ready.'
 
 COPY assets/nginx.conf /etc/nginx/sites-available/default
