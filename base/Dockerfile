@@ -30,7 +30,7 @@ RUN \
     apt-get update -qq && \
     apt-get upgrade -yqq && \
     apt-get autoremove --purge -yqq && \
-    apt-get install -yqq apt-transport-https curl git gnupg2 sudo unzip && \
+    apt-get install -yqq --no-install-recommends apt-transport-https ca-certificates curl git gnupg2 sudo unzip && \
     echo 'Set disable_coredump false' >> /etc/sudo.conf && \
     \
     echo '' && \
@@ -60,7 +60,7 @@ RUN \
         done \
     done; \
     APT_PACKAGES="$APT_PACKAGES $PHP_EXTENSIONS_COMMON" && \
-    apt-get install -yqq $APT_PACKAGES && \
+    apt-get install -yqq --no-install-recommends $APT_PACKAGES && \
     unset APT_PACKAGES && \
     unset PHP_VERSION && \
     unset PHP_EXTENSION && \
@@ -70,7 +70,7 @@ RUN \
     echo '# Installing NodeJS #' && \
     echo '#####################' && \
     curl -sSL https://deb.nodesource.com/setup_12.x | bash - && \
-    apt-get install -yqq nodejs && \
+    apt-get install -yqq --no-install-recommends nodejs && \
     npm -g install grunt-cli && \
     \
     echo '' && \
@@ -78,7 +78,7 @@ RUN \
     echo '# Installing MariaDB #' && \
     echo '######################' && \
     curl -sSL https://downloads.mariadb.com/MariaDB/mariadb_repo_setup | bash -s -- --skip-maxscale --mariadb-server-version=mariadb-10.4 && \
-    apt-get install -yqq mariadb-server && \
+    apt-get install -yqq --no-install-recommends mariadb-server && \
     \
     echo '' && \
     echo '####################' && \
@@ -87,7 +87,7 @@ RUN \
     printf 'deb http://ppa.launchpad.net/ondrej/nginx/ubuntu %s main\n' "$(. /etc/os-release && echo $VERSION_CODENAME)" >/etc/apt/sources.list.d/ondrej-nginx.list && \
     APT_KEY_DONT_WARN_ON_DANGEROUS_USAGE=1 apt-key adv --keyserver keyserver.ubuntu.com --recv-keys $ONDRENGINX_KEY && \
     apt-get update -yqq && \
-    apt-get install -yqq nginx && \
+    apt-get install -yqq --no-install-recommends nginx && \
     \
     echo '' && \
     echo '#######################' && \
