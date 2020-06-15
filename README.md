@@ -2,10 +2,10 @@
 
 Docker images that provide pre-installed concrete5 instances without the hassle of configuring them.
 
-Example: if you want to test your concrete5 package with concrete5 8.5.2, you can simply run this command:
+Example: if you want to test your concrete5 package with concrete5 8.5.4, you can simply run this command:
 
 ```bash
-docker run --rm -it -p 8080:80 -p 33306:3306 -v /path/to/your/package:/app/packages/package_handle mlocati/docker5:8.5.2-full
+docker run --rm -it -p 8080:80 -p 33306:3306 -v /path/to/your/package:/app/packages/package_handle mlocati/docker5:8.5.4-full
 ```
 
 Where:
@@ -37,7 +37,7 @@ Every docker images contains multiple PHP versions: 5.6, 7.2 and 7.4.
 When using the default entry point you can override the default one by specifying the CCM_PHP_VERSION environment variable, like this:
 
 ```bash
-docker run --rm -e "CCM_PHP_VERSION=7.2" mlocati/docker5:8.5.2-full
+docker run --rm -e "CCM_PHP_VERSION=7.2" mlocati/docker5:8.5.4-full
 ```
 
 From within the container you can use the `switch-php` command:
