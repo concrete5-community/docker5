@@ -30,7 +30,7 @@ RUN \
     apt-get update -qq && \
     apt-get upgrade -yqq && \
     apt-get autoremove --purge -yqq && \
-    apt-get install -yqq --no-install-recommends apt-transport-https ca-certificates curl git gnupg2 sudo unzip && \
+    apt-get install -yqq --no-install-recommends apt-transport-https ca-certificates curl git gnupg2 patch sudo unzip && \
     echo 'Set disable_coredump false' >> /etc/sudo.conf && \
     \
     echo '' && \
