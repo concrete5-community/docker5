@@ -1,0 +1,60 @@
+name: Update Docker image for ongoing branches
+
+on:
+  schedule:
+    - cron: "0 */12 * * *"
+  repository_dispatch:
+    types:
+      - build-ongoing
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      DOCKER5_BUILDBRANCH: develop
+    strategy:
+      matrix:
+        data:
+          - php_version: "7.2"
+            c5_startingpoint: elemental_full
+            image_tag: develop-full
+          - php_version: "7.2"
+            c5_startingpoint: elemental_blank
+            image_tag: develop
+    name: Update ongoing Docker image
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+      - name: Check if build is needed
+        id: check
+        run: ./.github/workflows/ongoing-branch-check
+      - name: Fetch base Docker image
+        if: steps.check.outputs.BUILD_SHA1
+        run: echo docker pull mlocati/docker5:base
+      - name: Build with starting point ${{ matrix.data.c5_startingpoint }}
+        if: steps.check.outputs.BUILD_SHA1
+        run: docker build --build-arg CCM_PHP_VERSION=${{ matrix.data.php_version }} --build-arg CCM_C5_ARCHIVE=https://codeload.github.com/concrete5/concrete5/tar.gz/${{ steps.check.outputs.BUILD_SHA1 }} --build-arg CCM_STARTING_POINT=${{ matrix.data.c5_startingpoint }} --tag mlocati/docker5:${{ matrix.data.image_tag }} ./installed
+      - name: Check that MariaDB works
+        if: steps.check.outputs.BUILD_SHA1
+        run: docker run --rm --entrypoint='' mlocati/docker5:${{ matrix.data.image_tag }} ccm-service start db
+      - name: Docker Hub login
+        if: steps.check.outputs.BUILD_SHA1
+        uses: actions-hub/docker/login@master
+        env:
+          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+          DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+          DEPLOY_KEY: ${{ secrets.DEPLOY_KEY }}
+      - name: Publish on Docker Hub
+        if: steps.check.outputs.BUILD_SHA1
+        uses: actions-hub/docker@master
+        with:
+          args: push mlocati/docker5:${{ matrix.data.image_tag }}
+      - name: Update repository
+        if: steps.check.outputs.BUILD_SHA1
+        env:
+          DEPLOY_KEY: "${{ secrets.DEPLOY_KEY }}"
+          GIT_SSH_COMMAND: "ssh -o StrictHostKeyChecking=no"
+          BUILT_SHA1: ${{ steps.check.outputs.BUILD_SHA1 }}
+        run: ./.github/workflows/ongoing-branch-updated

@@ -1,0 +1,46 @@
+#!/bin/sh
+
+set -o errexit
+set -o nounset
+
+if test -z "${GITHUB_WORKSPACE:-}"; then
+    echo 'GITHUB_WORKSPACE environment variable not set' >&2
+    exit 1
+fi
+if test -z "${DOCKER5_BUILDBRANCH:-}"; then
+    echo 'DOCKER5_BUILDBRANCH environment variable not set' >&2
+    exit 1
+fi
+
+printf "Retrieving current $DOCKER5_BUILDBRANCH sha1... "
+CURRENT_BRANCH_SHA1=$(git ls-remote --quiet --exit-code https://github.com/concrete5/concrete5.git "refs/heads/$DOCKER5_BUILDBRANCH" | cut -f1)
+if test -z "$CURRENT_BRANCH_SHA1"; then
+    echo 'FAILED!' >&2
+    exit 1
+fi
+printf '%s\n' "$CURRENT_BRANCH_SHA1"
+
+printf "Reading last built $DOCKER5_BUILDBRANCH sha1... "
+if test -f "$GITHUB_WORKSPACE/state/$DOCKER5_BUILDBRANCH.sha1"; then
+    LAST_BRANCH_SHA1=$(head -n1 "$GITHUB_WORKSPACE/state/$DOCKER5_BUILDBRANCH.sha1")
+else
+    LAST_BRANCH_SHA1=
+fi
+if test -z "$LAST_BRANCH_SHA1"; then
+    echo '<unknown>'
+    BRANCH_NEEDS_REBUILD=1
+elif test "$LAST_BRANCH_SHA1" != "$CURRENT_BRANCH_SHA1"; then
+    BRANCH_NEEDS_REBUILD=1
+    printf '%s (different)\n' "$LAST_BRANCH_SHA1"
+else
+    BRANCH_NEEDS_REBUILD=0
+    printf '%s (same)\n' "$LAST_BRANCH_SHA1"
+fi
+
+if test $BRANCH_NEEDS_REBUILD -eq 0; then
+    printf 'Rebuilding %s is not needed\n' "$DOCKER5_BUILDBRANCH"
+    printf "::set-output name=BUILD_SHA1::\n"
+else
+    printf 'Rebuilding %s is needed!\n' "$DOCKER5_BUILDBRANCH"
+    printf "::set-output name=BUILD_SHA1::%s\n" "$CURRENT_BRANCH_SHA1"
+fi

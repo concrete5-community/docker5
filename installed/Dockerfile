@@ -19,7 +19,7 @@ RUN \
     echo '# Downloading and extracting concrete5 #' && \
     echo '########################################'  && \
     printf '(URL: %s)\n' "$CCM_C5_ARCHIVE" && \
-    if test "${CCM_C5_ARCHIVE##*.}" = 'gz'; then \
+    if test "$CCM_C5_ARCHIVE" != "${CCM_C5_ARCHIVE#https://github.com/}" || test "$CCM_C5_ARCHIVE" != "${CCM_C5_ARCHIVE#https://codeload.github.com/}"; then \
         curl -sSL "$CCM_C5_ARCHIVE" | sudo -u www-data -- tar xz --strip 1; \
     else \
         curl -sSL -o /tmp/c5.zip "$CCM_C5_ARCHIVE" && \
