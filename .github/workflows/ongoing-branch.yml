@@ -27,9 +27,9 @@ jobs:
         uses: actions/checkout@v2
         with:
           fetch-depth: 0
-      - name: Check if build is needed
+      - name: Check if build is needed for ${{ matrix.data.c5_startingpoint }}
         id: check
-        run: ./.github/workflows/ongoing-branch-check
+        run: ./.github/workflows/ongoing-branch-check ${{ matrix.data.c5_startingpoint }}
       - name: Fetch base Docker image
         if: steps.check.outputs.BUILD_SHA1
         run: echo docker pull mlocati/docker5:base
@@ -57,4 +57,4 @@ jobs:
           DEPLOY_KEY: "${{ secrets.DEPLOY_KEY }}"
           GIT_SSH_COMMAND: "ssh -o StrictHostKeyChecking=no"
           BUILT_SHA1: ${{ steps.check.outputs.BUILD_SHA1 }}
-        run: ./.github/workflows/ongoing-branch-updated
+        run: ./.github/workflows/ongoing-branch-updated ${{ matrix.data.c5_startingpoint }}

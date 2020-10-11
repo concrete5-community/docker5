@@ -11,6 +11,11 @@ if test -z "${DOCKER5_BUILDBRANCH:-}"; then
     echo 'DOCKER5_BUILDBRANCH environment variable not set' >&2
     exit 1
 fi
+STARTING_POINT="${1:-}"
+if test -z "$STARTING_POINT"; then
+    echo 'Missing starting point argument' >&2
+    exit 1
+fi
 
 printf "Retrieving current $DOCKER5_BUILDBRANCH sha1... "
 CURRENT_BRANCH_SHA1=$(git ls-remote --quiet --exit-code https://github.com/concrete5/concrete5.git "refs/heads/$DOCKER5_BUILDBRANCH" | cut -f1)
@@ -21,8 +26,8 @@ fi
 printf '%s\n' "$CURRENT_BRANCH_SHA1"
 
 printf "Reading last built $DOCKER5_BUILDBRANCH sha1... "
-if test -f "$GITHUB_WORKSPACE/state/$DOCKER5_BUILDBRANCH.sha1"; then
-    LAST_BRANCH_SHA1=$(head -n1 "$GITHUB_WORKSPACE/state/$DOCKER5_BUILDBRANCH.sha1")
+if test -f "$GITHUB_WORKSPACE/state/$DOCKER5_BUILDBRANCH-$STARTING_POINT.sha1"; then
+    LAST_BRANCH_SHA1=$(head -n1 "$GITHUB_WORKSPACE/state/$DOCKER5_BUILDBRANCH-$STARTING_POINT.sha1")
 else
     LAST_BRANCH_SHA1=
 fi

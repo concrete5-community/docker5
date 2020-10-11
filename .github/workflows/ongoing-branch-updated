@@ -23,6 +23,11 @@ if test -z "${DEPLOY_KEY:-}"; then
     echo 'DEPLOY_KEY environment variable not set' >&2
     exit 1
 fi
+STARTING_POINT="${1:-}"
+if test -z "$STARTING_POINT"; then
+    echo 'Missing starting point argument' >&2
+    exit 1
+fi
 
 AUTHOR_NAME='Michele Locati'
 AUTHOR_EMAIL='michele@locati.it'
@@ -32,10 +37,6 @@ REPO_BRANCH='master'
 printf 'Checking-out branch %s\n' "$REPO_BRANCH"
 git checkout --force "$REPO_BRANCH"
 
-printf 'Saving state\n'
-mkdir -p "$GITHUB_WORKSPACE/state"
-printf '%s' "$BUILT_SHA1" >"$GITHUB_WORKSPACE/state/$DOCKER5_BUILDBRANCH.sha1"
-
 printf 'Initializing SSH'
 eval "$(ssh-agent)"
 printf '%s' "$DEPLOY_KEY" | tr -d '\r' | ssh-add - >/dev/null
@@ -43,10 +44,17 @@ printf '%s' "$DEPLOY_KEY" | tr -d '\r' | ssh-add - >/dev/null
 printf 'Adding %s remote\n' "$GITHUB_REPOSITORY"
 git remote add deploy "git@github.com:$GITHUB_REPOSITORY.git"
 
+printf 'Pulling from remote'
+git pull --ff-only origin "$REPO_BRANCH"
+
+printf 'Saving state\n'
+mkdir -p "$GITHUB_WORKSPACE/state"
+printf '%s' "$BUILT_SHA1" >"$GITHUB_WORKSPACE/state/$DOCKER5_BUILDBRANCH-$STARTING_POINT.sha1"
+
 echo 'Committing changes to README.md'
 git config user.name "$AUTHOR_NAME"
 git config user.email "$AUTHOR_EMAIL"
-git add "$GITHUB_WORKSPACE/state/$DOCKER5_BUILDBRANCH.sha1"
+git add "$GITHUB_WORKSPACE/state/$DOCKER5_BUILDBRANCH-$STARTING_POINT.sha1"
 git commit -m "$COMMIT_MESSAGE"
 
 printf 'Pushing to %s\n' "$GITHUB_REPOSITORY"
