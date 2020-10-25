@@ -95,7 +95,8 @@ RUN \
     echo '#######################' && \
     mkdir -p /var/www/.composer && \
     chown -R www-data:www-data /var/www/.composer && \
-    curl -sSL https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer && \
+    curl -sSL https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer --version=1.10.16 && \
+    composer --no-interaction --ansi --no-cache self-update --1 && \
     (sudo -H -u www-data -- composer global require hirak/prestissimo || true) && \
     (sudo -H -u www-data -- composer clear-cache || true) && \
     \
