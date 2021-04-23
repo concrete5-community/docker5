@@ -63,15 +63,23 @@ jobs:
             c5_startingpoint: elemental_blank
             image_tag: develop
           - php_version: "7.2"
+            c5_archive: https://www.concrete5.org/download_file/-/view/115589/
+            c5_startingpoint: elemental_full
+            image_tag: 8.5.5-full
+            additional_tag: latest-full
+          - php_version: "7.2"
+            c5_archive: https://www.concrete5.org/download_file/-/view/115589/
+            c5_startingpoint: elemental_blank
+            image_tag: 8.5.5
+            additional_tag: latest
+          - php_version: "7.2"
             c5_archive: https://www.concrete5.org/download_file/-/view/113632/8497/
             c5_startingpoint: elemental_full
             image_tag: 8.5.4-full
-            additional_tag: latest-full
           - php_version: "7.2"
             c5_archive: https://www.concrete5.org/download_file/-/view/113632/8497/
             c5_startingpoint: elemental_blank
             image_tag: 8.5.4
-            additional_tag: latest
           - php_version: "7.2"
             c5_archive: https://www.concrete5.org/download_file/-/view/111592/8497/
             c5_startingpoint: elemental_full
