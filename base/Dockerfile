@@ -15,8 +15,8 @@ COPY assets/switch-php /usr/local/bin/
 COPY assets/entrypoint.sh /
 COPY assets/bashrc /root/.bashrc
 
-ADD https://raw.githubusercontent.com/concrete5/cli/master/c5 /usr/local/bin/
-ADD https://raw.githubusercontent.com/concrete5/cli/master/composerpkg /usr/local/bin/
+ADD https://raw.githubusercontent.com/concrete5-community/cli/master/c5 /usr/local/bin/
+ADD https://raw.githubusercontent.com/concrete5-community/cli/master/composerpkg /usr/local/bin/
 
 EXPOSE 80
 EXPOSE 3306
