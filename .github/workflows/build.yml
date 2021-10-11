@@ -66,16 +66,26 @@ jobs:
             image_tag: develop
           -
             php_version: "7.2"
+            c5_archive: https://www.concretecms.com/download_file/61dab82f-fb01-47bc-8cf1-deffff890224
+            c5_startingpoint: elemental_full
+            image_tag: 8.5.6-full
+            additional_tag: latest-full
+          -
+            php_version: "7.2"
+            c5_archive: https://www.concretecms.com/download_file/61dab82f-fb01-47bc-8cf1-deffff890224
+            c5_startingpoint: elemental_blank
+            image_tag: 8.5.6
+            additional_tag: latest
+          -
+            php_version: "7.2"
             c5_archive: https://marketplace.concretecms.com/download_file/-/view/115589/
             c5_startingpoint: elemental_full
             image_tag: 8.5.5-full
-            additional_tag: latest-full
           -
             php_version: "7.2"
             c5_archive: https://marketplace.concretecms.com/download_file/-/view/115589/
             c5_startingpoint: elemental_blank
             image_tag: 8.5.5
-            additional_tag: latest
           -
             php_version: "7.2"
             c5_archive: https://marketplace.concretecms.com/download_file/-/view/113632/8497/
