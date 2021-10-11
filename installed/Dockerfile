@@ -35,6 +35,12 @@ RUN \
         echo '####################################' && \
         echo '# Installing composer dependencies #' && \
         echo '####################################' && \
+        if test -f concrete/composer.json; then \
+            sed -i 's/"hautelook\/phpass"/"ozh\/phpass"/' concrete/composer.json; \
+        fi; \
+        if test -f composer.lock; then \
+            sed -i 's_\bhautelook/phpass\b_ozh/phpass_' composer.lock; \
+        fi; \
         sudo -H -u www-data -- composer install --optimize-autoloader --no-suggest && \
         sudo -H -u www-data -- composer clear-cache; \
     fi; \
