@@ -2,157 +2,268 @@ name: Build Docker images
 
 on:
   pull_request:
+    paths:
+      - ".github/workflows/build.yml"
+      - "base/**"
+      - "installed/**"
   push:
     branches:
       - master
+    tags-ignore:
+      - "**"
+    paths:
+      - ".github/workflows/build.yml"
+      - "base/**"
+      - "installed/**"
   repository_dispatch:
     types:
       - build
+      - publish
 
 jobs:
-  build_base:
-    if: github.event_name != 'push' || !startsWith(github.event.head_commit.message, '[skip ci]')
+  check_envoronment:
+    name: Check environment
     runs-on: ubuntu-latest
-    name: Build base image
+    outputs:
+      action: ${{ steps.inspect.outputs.action }}
     steps:
-      - name: Environment info
+      - name: Inspect environment
+        id: inspect
+        run: |
+          action=none
+          echo '::set-output name=action::none'
+          case ${{ github.event_name }} in
+            repository_dispatch)
+              case "${{ github.event.event_type }}" in
+                build)
+                  action=build
+                  ;;
+                publish)
+                  action=publish
+                  ;;
+                *)
+                  echo 'Unrecognized event type: ${{ github.event.event_type }}'
+                  exit 1
+                  ;;
+              esac
+              ;;
+            push)
+              case "${{ github.event.head_commit.message }}" in
+                \[skip\ ci\]*)
+                  ;;
+                *)
+                  action=publish
+                  ;;
+              esac
+              ;;
+            pull_request)
+              action=build
+              ;;
+          esac
+          printf '::set-output name=action::%s\n' "$action"
+      - name: Print environment info
         run: |
           printf 'github.event_name: %s\n' "${{ github.event_name }}"
           printf 'github.ref: %s\n' "${{ github.ref }}"
+          printf 'Action to be performed: %s\n' "${{ steps.inspect.outputs.action }}"
+
+  build_base:
+    name: Build base image
+    needs:
+      - check_envoronment
+    runs-on: ubuntu-latest
+    if: needs.check_envoronment.outputs.action != 'none'
+    steps:
       - name: Checkout
-        uses: actions/checkout@v1
-        with:
-          fetch-depth: 1
+        uses: actions/checkout@v3
       - name: Build
-        run: docker build --force-rm --rm --tag mlocati/docker5:base ./base
+        run: docker build --force-rm --rm --tag ghcr.io/concrete5-community/docker5:base ./base
       - name: Save base Docker image
-        if: github.event_name != 'push' || github.ref != 'refs/heads/master'
-        run: |
-          mkdir -p /tmp/base-image
-          docker save mlocati/docker5:base | gzip > /tmp/base-image/image.tgz
-      - name: Upload
-        if: github.event_name != 'push' || github.ref != 'refs/heads/master'
-        uses: actions/upload-artifact@v1
+        if: needs.check_envoronment.outputs.action == 'build'
+        run: docker save ghcr.io/concrete5-community/docker5:base | gzip > /tmp/base-image.tgz
+      - name: Upload artifact
+        if: needs.check_envoronment.outputs.action == 'build'
+        uses: actions/upload-artifact@v3
         with:
           name: base-image
-          path: /tmp/base-image
-      - name: Docker Hub login
-        if: github.event_name == 'push' && github.ref == 'refs/heads/master'
-        uses: actions-hub/docker/login@master
-        env:
-          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
-          DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
-      - name: Publish on Docker Hub
-        if: github.event_name == 'push' && github.ref == 'refs/heads/master'
-        uses: actions-hub/docker@master
+          path: /tmp/base-image.tgz
+      - name: Login to the Docker container registry
+        if: needs.check_envoronment.outputs.action == 'publish'
+        uses: docker/login-action@v1
         with:
-          args: push mlocati/docker5:base
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Publish image
+        if: needs.check_envoronment.outputs.action == 'publish'
+        run: docker push "ghcr.io/concrete5-community/docker5:${{ matrix.php-version }}"
   build:
-    if: github.event_name != 'push' || !startsWith(github.event.head_commit.message, '[skip ci]')
+    name: Build ${{ matrix.data.image_tag }}
     runs-on: ubuntu-latest
-    needs: build_base
+    needs:
+      - check_envoronment
+      - build_base
+    if: needs.check_envoronment.outputs.action != 'none'
     strategy:
       matrix:
         data:
           -
-            php_version: "7.2"
+            php_version: "8.1"
+            composer_version: "2"
             c5_archive: https://github.com/concrete5/concrete5/archive/develop.tar.gz
-            c5_startingpoint: elemental_full
+            c5_startingpoint: atomik_full
             image_tag: develop-full
           -
-            php_version: "7.2"
+            php_version: "8.1"
+            composer_version: "2"
             c5_archive: https://github.com/concrete5/concrete5/archive/develop.tar.gz
             c5_startingpoint: elemental_blank
             image_tag: develop
           -
-            php_version: "7.2"
+            php_version: "8.1"
+            composer_version: "2"
+            c5_archive: https://www.concretecms.org/download_file/3254ddbf-35f0-4c92-8ed1-1fb6b9c0f0d4
+            c5_startingpoint: atomik_full
+            image_tag: 9.0.2-full
+            additional_tags: "9-full 9.0-full latest-full"
+          -
+            php_version: "8.1"
+            composer_version: "2"
+            c5_archive: https://www.concretecms.org/download_file/3254ddbf-35f0-4c92-8ed1-1fb6b9c0f0d4
+            c5_startingpoint: elemental_blank
+            image_tag: 9.0.2
+            additional_tags: "9 9.0 latest"
+          -
+            php_version: "8.1"
+            composer_version: "2"
+            c5_archive: https://www.concretecms.org/download_file/dc6d0589-6639-40ac-8c21-8f9f025b7e34
+            c5_startingpoint: atomik_full
+            image_tag: 9.0.1-full
+          -
+            php_version: "8.1"
+            composer_version: "2"
+            c5_archive: https://www.concretecms.org/download_file/dc6d0589-6639-40ac-8c21-8f9f025b7e34
+            c5_startingpoint: elemental_blank
+            image_tag: 9.0.1
+#          -
+#            php_version: "8.1"
+#            composer_version: "2"
+#            c5_archive: https://www.concretecms.com/download_file/29fd2f63-3f52-47d8-80a7-08be47d4ed07
+#            c5_startingpoint: atomik_full
+#            image_tag: 9.0.0-full
+#          -
+#            php_version: "8.1"
+#            composer_version: "2"
+#            c5_archive: https://www.concretecms.com/download_file/29fd2f63-3f52-47d8-80a7-08be47d4ed07
+#            c5_startingpoint: elemental_blank
+#            image_tag: 9.0.0
+          -
+            php_version: "7.4"
+            composer_version: "1"
+            c5_archive: https://www.concretecms.org/download_file/ae9cca19-d76c-458e-a63a-ce9b7b963e1d
+            c5_startingpoint: elemental_full
+            image_tag: 8.5.7-full
+            additional_tags: "8-full 8.5-full"
+          -
+            php_version: "7.4"
+            composer_version: "1"
+            c5_archive: https://www.concretecms.org/download_file/ae9cca19-d76c-458e-a63a-ce9b7b963e1d
+            c5_startingpoint: elemental_blank
+            image_tag: 8.5.7
+            additional_tags: "8 8.5"
+          -
+            php_version: "7.4"
+            composer_version: "1"
             c5_archive: https://www.concretecms.com/download_file/61dab82f-fb01-47bc-8cf1-deffff890224
             c5_startingpoint: elemental_full
             image_tag: 8.5.6-full
-            additional_tag: latest-full
           -
-            php_version: "7.2"
+            php_version: "7.4"
+            composer_version: "1"
             c5_archive: https://www.concretecms.com/download_file/61dab82f-fb01-47bc-8cf1-deffff890224
             c5_startingpoint: elemental_blank
             image_tag: 8.5.6
-            additional_tag: latest
           -
-            php_version: "7.2"
+            php_version: "7.4"
+            composer_version: "1"
             c5_archive: https://marketplace.concretecms.com/download_file/-/view/115589/
             c5_startingpoint: elemental_full
             image_tag: 8.5.5-full
           -
-            php_version: "7.2"
+            php_version: "7.4"
+            composer_version: "1"
             c5_archive: https://marketplace.concretecms.com/download_file/-/view/115589/
             c5_startingpoint: elemental_blank
             image_tag: 8.5.5
           -
-            php_version: "7.2"
+            php_version: "7.4"
+            composer_version: "1"
             c5_archive: https://marketplace.concretecms.com/download_file/-/view/113632/8497/
             c5_startingpoint: elemental_full
             image_tag: 8.5.4-full
           -
-            php_version: "7.2"
+            php_version: "7.4"
+            composer_version: "1"
             c5_archive: https://marketplace.concretecms.com/download_file/-/view/113632/8497/
             c5_startingpoint: elemental_blank
             image_tag: 8.5.4
           -
-            php_version: "7.2"
+            php_version: "7.4"
+            composer_version: "1"
             c5_archive: https://marketplace.concretecms.com/download_file/-/view/111592/8497/
             c5_startingpoint: elemental_full
             image_tag: 8.5.2-full
           -
-            php_version: "7.2"
+            php_version: "7.4"
+            composer_version: "1"
             c5_archive: https://marketplace.concretecms.com/download_file/-/view/111592/8497/
             c5_startingpoint: elemental_blank
             image_tag: 8.5.2
           -
             php_version: "5.6"
+            composer_version: "1"
             c5_archive: https://marketplace.concretecms.com/download_file/-/view/93075/8497/
             c5_startingpoint: elemental_full
             image_tag: 5.7.5.13-full
+            additional_tags: "5.7-full 5.7.5-full"
           -
             php_version: "5.6"
+            composer_version: "1"
             c5_archive: https://marketplace.concretecms.com/download_file/-/view/93075/8497/
             c5_startingpoint: elemental_blank
             image_tag: 5.7.5.13
-    name: concrete5 ${{ matrix.data.image_tag }}
+            additional_tags: "5.7 5.7.5"
     steps:
       - name: Checkout
-        uses: actions/checkout@v1
-        with:
-          fetch-depth: 1
+        uses: actions/checkout@v3
       - name: Download base image
-        if: github.event_name != 'push' || github.ref != 'refs/heads/master'
-        uses: actions/download-artifact@v1
+        if: needs.check_envoronment.outputs.action == 'build'
+        uses: actions/download-artifact@v3
         with:
           name: base-image
-          path: /tmp/base-image
+          path: /tmp/
       - name: Load base image
-        if: github.event_name != 'push' || github.ref != 'refs/heads/master'
-        run: docker load --input /tmp/base-image/image.tgz
+        if: needs.check_envoronment.outputs.action == 'build'
+        run: docker load --input /tmp/base-image.tgz
       - name: Build with starting point ${{ matrix.data.c5_startingpoint }}
         run: |
-          docker build --build-arg CCM_PHP_VERSION=${{ matrix.data.php_version }} --build-arg CCM_C5_ARCHIVE=${{ matrix.data.c5_archive }} --build-arg CCM_STARTING_POINT=${{ matrix.data.c5_startingpoint }} --tag mlocati/docker5:${{ matrix.data.image_tag }} ./installed
-          if test -n "${{ matrix.data.additional_tag }}"; then
-            docker tag mlocati/docker5:${{ matrix.data.image_tag }} mlocati/docker5:${{ matrix.data.additional_tag }}
-          fi
+          docker build --build-arg CCM_PHP_VERSION=${{ matrix.data.php_version }} --build-arg CCM_COMPOSER_VERSION=${{ matrix.data.composer_version }} --build-arg CCM_C5_ARCHIVE=${{ matrix.data.c5_archive }} --build-arg CCM_STARTING_POINT=${{ matrix.data.c5_startingpoint }} --tag ghcr.io/concrete5-community/docker5:${{ matrix.data.image_tag }} ./installed
+          for additional_tag in ${{ matrix.data.additional_tags }}; do
+            docker tag ghcr.io/concrete5-community/docker5:${{ matrix.data.image_tag }} ghcr.io/concrete5-community/docker5:$additional_tag
+          done
       - name: Check that MariaDB works
         run: |
-          docker run --rm --entrypoint='' mlocati/docker5:${{ matrix.data.image_tag }} ccm-service start db
-      - name: Docker Hub login
-        if: github.event_name == 'push' && github.ref == 'refs/heads/master'
-        uses: actions-hub/docker/login@master
-        env:
-          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
-          DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
-      - name: Publish on Docker Hub
-        if: github.event_name == 'push' && github.ref == 'refs/heads/master'
-        uses: actions-hub/docker@master
+          docker run --rm --entrypoint='' ghcr.io/concrete5-community/docker5:${{ matrix.data.image_tag }} ccm-service start db
+      - name: Remove base Docker image
+        if: needs.check_envoronment.outputs.action == 'publish'
+        run: docker rmi ghcr.io/concrete5-community/docker5:base
+      - name: Login to the Docker container registry
+        if: needs.check_envoronment.outputs.action == 'publish'
+        uses: docker/login-action@v1
         with:
-          args: push mlocati/docker5:${{ matrix.data.image_tag }}
-      - name: Publish on Docker Hub
-        if: github.event_name == 'push' && github.ref == 'refs/heads/master' && matrix.data.additional_tag
-        uses: actions-hub/docker@master
-        with:
-          args: push mlocati/docker5:${{ matrix.data.additional_tag }}
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Publish image
+        if: needs.check_envoronment.outputs.action == 'publish'
+        run: docker push  --all-tags ghcr.io/concrete5-community/docker5

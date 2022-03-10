@@ -1,0 +1,98 @@
+#!/bin/sh
+
+set -o errexit
+set -o nounset
+
+printTitle() {
+    printTitle_length=${#1}
+    printf "\n##%${printTitle_length}s##\n" ' ' | tr ' ' '#'
+    printf '# %s #\n' "$1"
+    printf "##%${printTitle_length}s##\n" ' ' | tr ' ' '#'
+}
+
+printTitle 'Updating system'
+apt-get update -q
+apt-get upgrade -yq
+apt-get autoremove --purge -yq
+
+printTitle 'Installing apt packages'
+apt-get install -yqq --no-install-recommends apt-transport-https ca-certificates curl git gnupg2 patch software-properties-common sudo unzip
+echo 'Set disable_coredump false' >> /etc/sudo.conf
+
+printTitle 'Configuring helper commands'
+chmod 0755 \
+    /usr/local/bin/ccm-service \
+    /usr/local/bin/switch-php \
+    /usr/local/bin/c5 \
+    /usr/local/bin/composerpkg \
+    /entrypoint.sh \
+
+printTitle 'Installing PHP FPM'
+LC_ALL=C.UTF-8 add-apt-repository ppa:ondrej/php
+APT_PACKAGES=''
+for PHP_VERSION in $PHP_VERSIONS; do
+    APT_PACKAGES="$APT_PACKAGES php$PHP_VERSION-fpm"
+    for PHP_EXTENSION in $PHP_EXTENSIONS_VSPECIFIC; do
+        APT_PACKAGE="php$PHP_VERSION-$PHP_EXTENSION"
+        case $APT_PACKAGE in
+            php8.*-json)
+                ;;
+            *)
+                APT_PACKAGES="$APT_PACKAGES $APT_PACKAGE"
+                ;;
+        esac
+    done
+done
+APT_PACKAGES="$APT_PACKAGES $PHP_EXTENSIONS_COMMON"
+apt-get install -yqq --no-install-recommends $APT_PACKAGES
+unset APT_PACKAGES
+unset PHP_VERSION
+unset PHP_EXTENSION
+
+printTitle 'Installing NodeJS'
+curl -sSL https://deb.nodesource.com/setup_12.x | bash -
+apt-get install -yqq --no-install-recommends nodejs
+npm -g install grunt-cli
+
+printTitle 'Installing MariaDB'
+curl -sSL https://downloads.mariadb.com/MariaDB/mariadb_repo_setup | bash -s -- --skip-maxscale --mariadb-server-version=mariadb-10.4
+apt-get install -yqq --no-install-recommends mariadb-server
+
+printTitle 'Installing Nginx'
+LC_ALL=C.UTF-8 add-apt-repository ppa:ondrej/nginx
+apt-get install -yqq --no-install-recommends nginx
+
+printTitle 'Installing Composer'
+mkdir -p /var/www/.composer
+chown -R www-data:www-data /var/www/.composer
+
+curl -sSLf -o /tmp/composer-installer https://getcomposer.org/installer
+php /tmp/composer-installer --install-dir=/usr/local/bin --filename=composer1 --1
+update-alternatives --quiet --install /usr/local/bin/composer composer /usr/local/bin/composer1 10
+php /tmp/composer-installer --install-dir=/usr/local/bin --filename=composer2 --2
+update-alternatives --quiet --install /usr/local/bin/composer composer /usr/local/bin/composer2 20
+rm /tmp/composer-installer
+
+switch-composer 1
+(sudo -H -u www-data -- composer clear-cache || true)
+
+printTitle 'Configuring database'
+sed -i -r 's/^(\s*bind-address\s*=\s*)127\.0\.0\.1(\s*)$/\10.0.0.0\2/' /etc/mysql/my.cnf
+sed -i -r 's/^(\s*innodb_flush_method\s*=\s*)\S.*?(\s*)$/\1fsync\2/' /etc/mysql/my.cnf
+(test -f /etc/mysql/mariadb.conf.d/50-server.cnf && sed -i -r 's/^(\s*bind-address\s*=\s*)127\.0\.0\.1(\s*)$/\10.0.0.0\2/' /etc/mysql/mariadb.conf.d/50-server.cnf || true)
+(test -f /etc/mysql/mariadb.conf.d/50-server.cnf && echo 'innodb_flush_method = fsync' >> /etc/mysql/mariadb.conf.d/50-server.cnf || true)
+ccm-service start db
+echo "CREATE USER 'c5'@'%' IDENTIFIED BY '12345'; CREATE DATABASE c5 COLLATE 'utf8mb4_unicode_ci'; GRANT ALL PRIVILEGES ON c5.* TO 'c5'@'%'; FLUSH PRIVILEGES;" | mysql
+
+printTitle 'Final operations'
+apt-get remove -qy --autoremove --purge software-properties-common
+mkdir /app
+chown www-data:www-data /app
+ccm-service stop
+rm -rf /var/lib/apt/lists/*
+npm cache clean --force
+rm -rf $HOME/.npm/_logs/*.log
+truncate --size=0 /var/log/*.log /var/log/apt/*.log
+rm -rf /var/log/apt/eipp.log.xz
+
+printTitle 'Ready.'

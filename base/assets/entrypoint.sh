@@ -6,6 +6,12 @@ if test -n "${CCM_PHP_VERSION:-}"; then
     fi
 fi
 
+if test -n "${CCM_COMPOSER_VERSION:-}"; then
+    if ! switch-composer "$CCM_COMPOSER_VERSION"; then
+        exit 1
+    fi
+fi
+
 if ! ccm-service start; then
     echo 'Failed to start services' >&2
     ccm-service stop >/dev/null 2>&1
@@ -30,7 +36,19 @@ EOF
         sleep infinity &
         wait
     else
-        echo 'Type "exit" (or CTRL-D) to quit this docker5 container'
+        cat << EOF
+
+Available docker5 commands
+- ccm-service
+  Start, restart, stop Nginx and/or MariaDB and/or PHP-FPM
+- switch-php
+  Switch the PHP version used by the CLI and by Nginx
+- switch-composer
+  Switch the Composer version used by the CLI
+
+Type "exit" (or CTRL-D) to quit this docker5 container
+
+EOF
         bash
         rc=$?
     fi
