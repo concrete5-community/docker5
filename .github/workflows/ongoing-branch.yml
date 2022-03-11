@@ -50,11 +50,9 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
       - name: Publish image
         if: steps.check.outputs.BUILD_SHA1
-        run: docker push push ghcr.io/concrete5-community/docker5:${{ matrix.data.image_tag }}
+        run: docker push ghcr.io/concrete5-community/docker5:${{ matrix.data.image_tag }}
       - name: Update repository
         if: steps.check.outputs.BUILD_SHA1
         env:
-          DEPLOY_KEY: "${{ secrets.DEPLOY_KEY }}"
-          GIT_SSH_COMMAND: "ssh -o StrictHostKeyChecking=no"
           BUILT_SHA1: ${{ steps.check.outputs.BUILD_SHA1 }}
         run: ./.github/workflows/ongoing-branch-updated ${{ matrix.data.c5_startingpoint }}

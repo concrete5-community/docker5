@@ -19,10 +19,6 @@ if test -z "${BUILT_SHA1:-}"; then
     echo 'BUILT_SHA1 environment variable not set' >&2
     exit 1
 fi
-if test -z "${DEPLOY_KEY:-}"; then
-    echo 'DEPLOY_KEY environment variable not set' >&2
-    exit 1
-fi
 STARTING_POINT="${1:-}"
 if test -z "$STARTING_POINT"; then
     echo 'Missing starting point argument' >&2
@@ -37,13 +33,6 @@ REPO_BRANCH='master'
 printf 'Checking-out branch %s\n' "$REPO_BRANCH"
 git checkout --force "$REPO_BRANCH"
 
-printf 'Initializing SSH'
-eval "$(ssh-agent)"
-printf '%s' "$DEPLOY_KEY" | tr -d '\r' | ssh-add - >/dev/null
-
-printf 'Adding %s remote\n' "$GITHUB_REPOSITORY"
-git remote add deploy "git@github.com:$GITHUB_REPOSITORY.git"
-
 printf 'Pulling from remote'
 git pull --ff-only origin "$REPO_BRANCH"
 
@@ -52,12 +41,12 @@ mkdir -p "$GITHUB_WORKSPACE/state"
 printf '%s' "$BUILT_SHA1" >"$GITHUB_WORKSPACE/state/$DOCKER5_BUILDBRANCH-$STARTING_POINT.sha1"
 
 echo 'Committing changes to README.md'
-git config user.name "$AUTHOR_NAME"
-git config user.email "$AUTHOR_EMAIL"
+git config --local user.name "$AUTHOR_NAME"
+git config --local user.email "$AUTHOR_EMAIL"
 git add "$GITHUB_WORKSPACE/state/$DOCKER5_BUILDBRANCH-$STARTING_POINT.sha1"
 git commit -m "$COMMIT_MESSAGE"
 
 printf 'Pushing to %s\n' "$GITHUB_REPOSITORY"
-git push deploy "$REPO_BRANCH:$REPO_BRANCH"
+git push
 
 echo 'Done.'
