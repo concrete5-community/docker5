@@ -96,7 +96,7 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
       - name: Publish image
         if: needs.check_envoronment.outputs.action == 'publish'
-        run: docker push "ghcr.io/concrete5-community/docker5:${{ matrix.php-version }}"
+        run: docker push ghcr.io/concrete5-community/docker5:base
   build:
     name: Build ${{ matrix.data.image_tag }}
     runs-on: ubuntu-latest
