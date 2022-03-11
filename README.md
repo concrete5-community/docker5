@@ -1,30 +1,30 @@
-# Docker images with ready-to use concrete5
+# Docker images with ready-to use ConcreteCMS
 
-Docker images that provide pre-installed concrete5 instances without the hassle of configuring them.
+Docker images that provide pre-installed ConcreteCMS instances without the hassle of configuring them.
 
-Example: if you want to test your concrete5 package with concrete5 8.5.4, you can simply run this command:
+Example: if you want to test your ConcreteCMS package with ConcreteCMS 8.5.4, you can simply run this command:
 
 ```bash
-docker run --rm -it -p 8080:80 -p 33306:3306 -v /path/to/your/package:/app/packages/package_handle mlocati/docker5:8.5.4-full
+docker run --rm -it -p 8080:80 -p 33306:3306 -v /path/to/your/package:/app/packages/package_handle ghcr.io/concrete5-community/docker5:8.5.4-full
 ```
 
 Where:
-- `8080` is the port where you'll browse the concrete5 website (available at `http://localhost:8080`)
-- `/path/to/your/package` is the absolute path of the concrete5 package you are going to test (on Windows use `\` instead of `/`)
+- `8080` is the port where you'll browse the ConcreteCMS website (available at `http://localhost:8080`)
+- `/path/to/your/package` is the absolute path of the ConcreteCMS package you are going to test (on Windows use `\` instead of `/`)
 - `package_handle` is the handle of the package
 
 You can then install the package through the web interface or through the CLI interface (`c5 c5:package:install package_handle`).
 
 ## References
 
-Pre-compiled images: https://hub.docker.com/r/mlocati/docker5
+Pre-compiled images: https://github.com/concrete5-community/docker5/pkgs/container/docker5
 
 Source repository: https://github.com/concrete5-community/docker5
 
 ## Configuration parameters
 
 - Password of the `admin` user: `12345`
-- Name of the concrete5 database: `c5`
+- Name of the ConcreteCMS database: `c5`
 - Database user name: `c5`
 - Database user password: `12345`
 - Exposed port for the website: `80`
@@ -32,18 +32,34 @@ Source repository: https://github.com/concrete5-community/docker5
 
 ## PHP Versions
 
-Every docker images contains multiple PHP versions: 5.6, 7.2 and 7.4.
+Every docker images contains multiple PHP versions: 5.6, 7.4 and 8.1.
 
-When using the default entry point you can override the default one by specifying the CCM_PHP_VERSION environment variable, like this:
+When using the default entry point you can override the default one by specifying the `CCM_PHP_VERSION` environment variable, like this:
 
 ```bash
-docker run --rm -e "CCM_PHP_VERSION=7.2" mlocati/docker5:8.5.4-full
+docker run --rm -e "CCM_PHP_VERSION=7.4" ghcr.io/concrete5-community/docker5:8.5.4-full
 ```
 
 From within the container you can use the `switch-php` command:
 
 ```bash
-switch-php 7.2
+switch-php 7.4
+```
+
+## Composer Versions
+
+Every docker images contains both composer v1 and composer v2.
+
+When using the default entry point you can override the default one by specifying the `CCM_COMPOSER_VERSION` environment variable, like this:
+
+```bash
+docker run --rm -e "CCM_COMPOSER_VERSION=2" ghcr.io/concrete5-community/docker5:9.0.2-full
+```
+
+From within the container you can use the `switch-composer` command:
+
+```bash
+switch-composer 2
 ```
 
 ## Starting/stopping services
