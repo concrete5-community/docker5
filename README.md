@@ -32,7 +32,7 @@ Source repository: https://github.com/concrete5-community/docker5
 
 ## PHP Versions
 
-Every docker images contains multiple PHP versions: 5.6, 7.4 and 8.1.
+Every docker image contains multiple PHP versions: 5.6, 7.4 and 8.1.
 
 When using the default entry point you can override the default one by specifying the `CCM_PHP_VERSION` environment variable, like this:
 
@@ -48,7 +48,7 @@ switch-php 7.4
 
 ## Composer Versions
 
-Every docker images contains both composer v1 and composer v2.
+Every docker image contains both composer v1 and composer v2.
 
 When using the default entry point you can override the default one by specifying the `CCM_COMPOSER_VERSION` environment variable, like this:
 
@@ -73,7 +73,7 @@ You can also control them by using the `ccm-service` command to start/stop/resta
 ccm-service start
 # Stop all the services
 ccm-service stop
-# Restart only the databse service
+# Restart only the database service
 ccm-service restart db
 # Check if the PHP-FPM service and the Nginx services are running
 ccm-service status php-fpm nginx
