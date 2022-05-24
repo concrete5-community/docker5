@@ -122,17 +122,31 @@ jobs:
           -
             php_version: "8.1"
             composer_version: "2"
+            c5_archive: https://www.concretecms.com/download_file/fc6337ea-3e83-4cb6-b6a0-bd292fe2e2a8
+            c5_startingpoint: atomik_full
+            image_tag: 9.1.0-full
+            additional_tags: "9-full 9.1-full latest-full"
+          -
+            php_version: "8.1"
+            composer_version: "2"
+            c5_archive: https://www.concretecms.com/download_file/fc6337ea-3e83-4cb6-b6a0-bd292fe2e2a8
+            c5_startingpoint: elemental_blank
+            image_tag: 9.1.0
+            additional_tags: "9 9.1 latest"
+          -
+            php_version: "8.1"
+            composer_version: "2"
             c5_archive: https://www.concretecms.org/download_file/3254ddbf-35f0-4c92-8ed1-1fb6b9c0f0d4
             c5_startingpoint: atomik_full
             image_tag: 9.0.2-full
-            additional_tags: "9-full 9.0-full latest-full"
+            additional_tags: "9.0-full"
           -
             php_version: "8.1"
             composer_version: "2"
             c5_archive: https://www.concretecms.org/download_file/3254ddbf-35f0-4c92-8ed1-1fb6b9c0f0d4
             c5_startingpoint: elemental_blank
             image_tag: 9.0.2
-            additional_tags: "9 9.0 latest"
+            additional_tags: "9.0"
           -
             php_version: "8.1"
             composer_version: "2"
