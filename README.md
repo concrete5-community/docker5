@@ -32,7 +32,7 @@ Source repository: https://github.com/concrete5-community/docker5
 
 ## PHP Versions
 
-Every docker image contains multiple PHP versions: 5.6, 7.4 and 8.1.
+Every docker image contains multiple PHP versions: 5.6, 7.4, 8.1, and 8.2.
 
 When using the default entry point you can override the default one by specifying the `CCM_PHP_VERSION` environment variable, like this:
 
