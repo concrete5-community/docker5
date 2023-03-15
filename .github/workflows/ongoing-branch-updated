@@ -28,7 +28,7 @@ fi
 AUTHOR_NAME='Michele Locati'
 AUTHOR_EMAIL='michele@locati.it'
 COMMIT_MESSAGE="[skip ci] Save state of last built $DOCKER5_BUILDBRANCH branch"
-REPO_BRANCH='master'
+REPO_BRANCH='main'
 
 printf 'Checking-out branch %s\n' "$REPO_BRANCH"
 git checkout --force "$REPO_BRANCH"

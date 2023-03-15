@@ -8,7 +8,7 @@ on:
       - "installed/**"
   push:
     branches:
-      - master
+      - main
     tags-ignore:
       - "**"
     paths:
