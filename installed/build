@@ -38,7 +38,7 @@ if ! test -d concrete/vendor; then
     if test -f composer.lock; then
         sed -i 's_\bhautelook/phpass\b_ozh/phpass_' composer.lock
     fi
-    sudo -H -u www-data -- composer install --optimize-autoloader --no-suggest --no-cache
+    sudo -H -u www-data -- composer install --optimize-autoloader --no-cache
 fi
 
 printTitle 'Installing Concrete'
