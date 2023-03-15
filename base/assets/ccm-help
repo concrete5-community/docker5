@@ -17,4 +17,16 @@ docker5 images come with the following CLI commands:
 - switch-php: change the PHP version to be used.
   Invoke it without arguments to get some help.
 
+
+Concrete has been installed with this options:
+
+- Concrete user name: admin
+- Concrete user password: 12345
+- Name of the Concrete database: c5
+- Database user name: c5
+- Database user password: 12345
+- Exposed port for the website: 80
+- Exposed port for the database: 3306
+
+
 EOT
