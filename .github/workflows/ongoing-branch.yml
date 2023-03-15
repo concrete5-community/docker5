@@ -43,7 +43,7 @@ jobs:
         run: docker run --rm --entrypoint='' ghcr.io/concrete5-community/docker5:${{ matrix.data.image_tag }} ccm-service start db
       - name: Login to the Docker container registry
         if: steps.check.outputs.BUILD_SHA1
-        uses: docker/login-action@v1
+        uses: docker/login-action@v2
         with:
           registry: ghcr.io
           username: ${{ github.actor }}

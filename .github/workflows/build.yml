@@ -89,7 +89,7 @@ jobs:
           path: /tmp/base-image.tgz
       - name: Login to the Docker container registry
         if: needs.check_envoronment.outputs.action == 'publish'
-        uses: docker/login-action@v1
+        uses: docker/login-action@v2
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
@@ -310,7 +310,7 @@ jobs:
         run: docker rmi ghcr.io/concrete5-community/docker5:base
       - name: Login to the Docker container registry
         if: needs.check_envoronment.outputs.action == 'publish'
-        uses: docker/login-action@v1
+        uses: docker/login-action@v2
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
