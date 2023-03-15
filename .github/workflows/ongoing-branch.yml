@@ -21,7 +21,7 @@ jobs:
             image_tag: develop-full
           - php_version: "8.1"
             composer_version: "2"
-            c5_startingpoint: elemental_blank
+            c5_startingpoint: atomik_blank
             image_tag: develop
     name: Update ongoing Docker image
     steps:

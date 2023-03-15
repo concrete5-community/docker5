@@ -117,7 +117,7 @@ jobs:
             php_version: "8.1"
             composer_version: "2"
             c5_archive: https://github.com/concrete5/concrete5/archive/develop.tar.gz
-            c5_startingpoint: elemental_blank
+            c5_startingpoint: atomik_blank
             image_tag: develop
           -
             php_version: "8.1"
