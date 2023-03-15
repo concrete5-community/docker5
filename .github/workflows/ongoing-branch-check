@@ -11,6 +11,10 @@ if test -z "${DOCKER5_BUILDBRANCH:-}"; then
     echo 'DOCKER5_BUILDBRANCH environment variable not set' >&2
     exit 1
 fi
+if test -z "${GITHUB_OUTPUT:-}"; then
+    echo 'GITHUB_OUTPUT environment variable not set' >&2
+    exit 1
+fi
 STARTING_POINT="${1:-}"
 if test -z "$STARTING_POINT"; then
     echo 'Missing starting point argument' >&2
@@ -44,8 +48,8 @@ fi
 
 if test $BRANCH_NEEDS_REBUILD -eq 0; then
     printf 'Rebuilding %s is not needed\n' "$DOCKER5_BUILDBRANCH"
-    printf "::set-output name=BUILD_SHA1::\n"
+    echo "BUILD_SHA1=" >> $GITHUB_OUTPUT
 else
     printf 'Rebuilding %s is needed!\n' "$DOCKER5_BUILDBRANCH"
-    printf "::set-output name=BUILD_SHA1::%s\n" "$CURRENT_BRANCH_SHA1"
+    echo "BUILD_SHA1=$CURRENT_BRANCH_SHA1" >> $GITHUB_OUTPUT
 fi

@@ -31,7 +31,7 @@ jobs:
         id: inspect
         run: |
           action=none
-          echo '::set-output name=action::none'
+          echo 'action=none' >> $GITHUB_OUTPUT
           case ${{ github.event_name }} in
             repository_dispatch)
               case "${{ github.event.event_type }}" in
@@ -60,7 +60,7 @@ jobs:
               action=build
               ;;
           esac
-          printf '::set-output name=action::%s\n' "$action"
+          echo "action=$action" >> $GITHUB_OUTPUT
       - name: Print environment info
         run: |
           printf 'github.event_name: %s\n' "${{ github.event_name }}"
