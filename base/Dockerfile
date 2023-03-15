@@ -8,6 +8,7 @@ ARG PHP_VERSIONS="5.6 7.4 8.1 8.2"
 ARG PHP_EXTENSIONS_VSPECIFIC="bcmath bz2 curl exif ftp gd gmp imagick imap intl json ldap mbstring mysql opcache pdo soap ssh2 xml xsl zip"
 ARG PHP_EXTENSIONS_COMMON="php-redis"
 
+COPY assets/ccm-help /usr/local/bin/
 COPY assets/ccm-service /usr/local/bin/
 COPY assets/switch-php /usr/local/bin/
 COPY assets/switch-composer /usr/local/bin/

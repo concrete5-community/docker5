@@ -36,15 +36,8 @@ EOF
         sleep infinity &
         wait
     else
+        ccm-help
         cat << EOF
-
-Available docker5 commands
-- ccm-service
-  Start, restart, stop Nginx and/or MariaDB and/or PHP-FPM
-- switch-php
-  Switch the PHP version used by the CLI and by Nginx
-- switch-composer
-  Switch the Composer version used by the CLI
 
 Type "exit" (or CTRL-D) to quit this docker5 container
 

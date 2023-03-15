@@ -30,6 +30,11 @@ Source repository: https://github.com/concrete5-community/docker5
 - Exposed port for the website: `80`
 - Exposed port for the database: `3306`
 
+## Additional CLI commands
+
+docker5 images come with some service CLI commands.
+You can get a list of them by running the `ccm-help` CLI command.
+
 ## PHP Versions
 
 Every docker image contains multiple PHP versions: 5.6, 7.4, 8.1, and 8.2.

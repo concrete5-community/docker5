@@ -21,6 +21,7 @@ echo 'Set disable_coredump false' >> /etc/sudo.conf
 
 printTitle 'Configuring helper commands'
 chmod 0755 \
+    /usr/local/bin/ccm-help \
     /usr/local/bin/ccm-service \
     /usr/local/bin/switch-php \
     /usr/local/bin/c5 \
