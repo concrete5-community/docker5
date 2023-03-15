@@ -110,13 +110,13 @@ jobs:
           -
             php_version: "8.1"
             composer_version: "2"
-            c5_archive: https://github.com/concrete5/concrete5/archive/develop.tar.gz
+            c5_archive: https://github.com/concretecms/concretecms/archive/develop.tar.gz
             c5_startingpoint: atomik_full
             image_tag: develop-full
           -
             php_version: "8.1"
             composer_version: "2"
-            c5_archive: https://github.com/concrete5/concrete5/archive/develop.tar.gz
+            c5_archive: https://github.com/concretecms/concretecms/archive/develop.tar.gz
             c5_startingpoint: atomik_blank
             image_tag: develop
           -

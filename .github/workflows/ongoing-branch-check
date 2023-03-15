@@ -18,7 +18,7 @@ if test -z "$STARTING_POINT"; then
 fi
 
 printf "Retrieving current $DOCKER5_BUILDBRANCH sha1... "
-CURRENT_BRANCH_SHA1=$(git ls-remote --quiet --exit-code https://github.com/concrete5/concrete5.git "refs/heads/$DOCKER5_BUILDBRANCH" | cut -f1)
+CURRENT_BRANCH_SHA1=$(git ls-remote --quiet --exit-code https://github.com/concretecms/concretecms.git "refs/heads/$DOCKER5_BUILDBRANCH" | cut -f1)
 if test -z "$CURRENT_BRANCH_SHA1"; then
     echo 'FAILED!' >&2
     exit 1
