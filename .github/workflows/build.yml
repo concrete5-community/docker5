@@ -130,7 +130,7 @@ jobs:
             php_version: "8.1"
             composer_version: "2"
             c5_archive: https://www.concretecms.com/download_file/277af433-97d4-4817-b48c-a758cd8adf96
-            c5_startingpoint: elemental_blank
+            c5_startingpoint: atomik_blank
             image_tag: 9.2.0
             additional_tags: "9 9.2 latest"
           -
