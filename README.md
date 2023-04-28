@@ -83,3 +83,8 @@ ccm-service restart db
 # Check if the PHP-FPM service and the Nginx services are running
 ccm-service status php-fpm nginx
 ```
+
+## Notifications
+
+This repository contains a copuple of scheduled GitHub Actions.
+If you want to be notified about problems, you can subscribe to [this Telegram channel](https://t.me/Docker5Notifications).
