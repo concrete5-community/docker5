@@ -97,207 +97,37 @@ jobs:
       - name: Publish image
         if: needs.check_envoronment.outputs.action == 'publish'
         run: docker push ghcr.io/concrete5-community/docker5:base
+
+  generate_matrix:
+    name: Generate matrix
+    runs-on: ubuntu-latest
+    outputs:
+      generated-matrix: ${{ steps.generate-matrix.outputs.generated-matrix }}
+    steps:
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          extensions: none
+          tools: none
+          coverage: none
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Generate matrix
+        id: generate-matrix
+        run: ./.github/workflows/generate-matrix "$GITHUB_OUTPUT"
+
   build:
     name: Build ${{ matrix.data.image_tag }}
     runs-on: ubuntu-latest
     needs:
       - check_envoronment
       - build_base
+      - generate_matrix
     if: needs.check_envoronment.outputs.action != 'none'
     strategy:
       matrix:
-        data:
-          -
-            php_version: "8.1"
-            composer_version: "2"
-            c5_archive: https://github.com/concretecms/concretecms/archive/develop.tar.gz
-            c5_startingpoint: atomik_full
-            image_tag: develop-full
-          -
-            php_version: "8.1"
-            composer_version: "2"
-            c5_archive: https://github.com/concretecms/concretecms/archive/develop.tar.gz
-            c5_startingpoint: atomik_blank
-            image_tag: develop
-          -
-            php_version: "8.1"
-            composer_version: "2"
-            c5_archive: https://www.concretecms.com/download_file/277af433-97d4-4817-b48c-a758cd8adf96
-            c5_startingpoint: atomik_full
-            image_tag: 9.2.0-full
-            additional_tags: "9-full 9.2-full latest-full"
-          -
-            php_version: "8.1"
-            composer_version: "2"
-            c5_archive: https://www.concretecms.com/download_file/277af433-97d4-4817-b48c-a758cd8adf96
-            c5_startingpoint: atomik_blank
-            image_tag: 9.2.0
-            additional_tags: "9 9.2 latest"
-          -
-            php_version: "8.1"
-            composer_version: "2"
-            c5_archive: https://www.concretecms.com/download_file/f7867cc1-3cbd-45b6-8df7-66ea2151eda0
-            c5_startingpoint: atomik_full
-            image_tag: 9.1.3-full
-            additional_tags: "9.1-full"
-          -
-            php_version: "8.1"
-            composer_version: "2"
-            c5_archive: https://www.concretecms.com/download_file/f7867cc1-3cbd-45b6-8df7-66ea2151eda0
-            c5_startingpoint: elemental_blank
-            image_tag: 9.1.3
-            additional_tags: "9.1"
-          -
-            php_version: "8.1"
-            composer_version: "2"
-            c5_archive: https://www.concretecms.com/download_file/e005c931-9ee3-4fb7-895f-760bb01f2c4d/
-            c5_startingpoint: atomik_full
-            image_tag: 9.1.2-full
-          -
-            php_version: "8.1"
-            composer_version: "2"
-            c5_archive: https://www.concretecms.com/download_file/e005c931-9ee3-4fb7-895f-760bb01f2c4d/
-            c5_startingpoint: elemental_blank
-            image_tag: 9.1.2
-          -
-            php_version: "8.1"
-            composer_version: "2"
-            c5_archive: https://www.concretecms.com/download_file/c8c925b8-9a63-4b23-aff3-cb0e76a0e168/
-            c5_startingpoint: atomik_full
-            image_tag: 9.1.1-full
-          -
-            php_version: "8.1"
-            composer_version: "2"
-            c5_archive: https://www.concretecms.com/download_file/c8c925b8-9a63-4b23-aff3-cb0e76a0e168/
-            c5_startingpoint: elemental_blank
-            image_tag: 9.1.1
-          -
-            php_version: "8.1"
-            composer_version: "2"
-            c5_archive: https://www.concretecms.com/download_file/fc6337ea-3e83-4cb6-b6a0-bd292fe2e2a8
-            c5_startingpoint: atomik_full
-            image_tag: 9.1.0-full
-          -
-            php_version: "8.1"
-            composer_version: "2"
-            c5_archive: https://www.concretecms.com/download_file/fc6337ea-3e83-4cb6-b6a0-bd292fe2e2a8
-            c5_startingpoint: elemental_blank
-            image_tag: 9.1.0
-
-          -
-            php_version: "8.1"
-            composer_version: "2"
-            c5_archive: https://www.concretecms.org/download_file/3254ddbf-35f0-4c92-8ed1-1fb6b9c0f0d4
-            c5_startingpoint: atomik_full
-            image_tag: 9.0.2-full
-            additional_tags: "9.0-full"
-          -
-            php_version: "8.1"
-            composer_version: "2"
-            c5_archive: https://www.concretecms.org/download_file/3254ddbf-35f0-4c92-8ed1-1fb6b9c0f0d4
-            c5_startingpoint: elemental_blank
-            image_tag: 9.0.2
-            additional_tags: "9.0"
-          -
-            php_version: "8.1"
-            composer_version: "2"
-            c5_archive: https://www.concretecms.org/download_file/dc6d0589-6639-40ac-8c21-8f9f025b7e34
-            c5_startingpoint: atomik_full
-            image_tag: 9.0.1-full
-          -
-            php_version: "8.1"
-            composer_version: "2"
-            c5_archive: https://www.concretecms.org/download_file/dc6d0589-6639-40ac-8c21-8f9f025b7e34
-            c5_startingpoint: elemental_blank
-            image_tag: 9.0.1
-#          -
-#            php_version: "8.1"
-#            composer_version: "2"
-#            c5_archive: https://www.concretecms.com/download_file/29fd2f63-3f52-47d8-80a7-08be47d4ed07
-#            c5_startingpoint: atomik_full
-#            image_tag: 9.0.0-full
-#          -
-#            php_version: "8.1"
-#            composer_version: "2"
-#            c5_archive: https://www.concretecms.com/download_file/29fd2f63-3f52-47d8-80a7-08be47d4ed07
-#            c5_startingpoint: elemental_blank
-#            image_tag: 9.0.0
-          -
-            php_version: "7.4"
-            composer_version: "1"
-            c5_archive: https://www.concretecms.org/download_file/ae9cca19-d76c-458e-a63a-ce9b7b963e1d
-            c5_startingpoint: elemental_full
-            image_tag: 8.5.7-full
-            additional_tags: "8-full 8.5-full"
-          -
-            php_version: "7.4"
-            composer_version: "1"
-            c5_archive: https://www.concretecms.org/download_file/ae9cca19-d76c-458e-a63a-ce9b7b963e1d
-            c5_startingpoint: elemental_blank
-            image_tag: 8.5.7
-            additional_tags: "8 8.5"
-          -
-            php_version: "7.4"
-            composer_version: "1"
-            c5_archive: https://www.concretecms.com/download_file/61dab82f-fb01-47bc-8cf1-deffff890224
-            c5_startingpoint: elemental_full
-            image_tag: 8.5.6-full
-          -
-            php_version: "7.4"
-            composer_version: "1"
-            c5_archive: https://www.concretecms.com/download_file/61dab82f-fb01-47bc-8cf1-deffff890224
-            c5_startingpoint: elemental_blank
-            image_tag: 8.5.6
-          -
-            php_version: "7.4"
-            composer_version: "1"
-            c5_archive: https://marketplace.concretecms.com/download_file/-/view/115589/
-            c5_startingpoint: elemental_full
-            image_tag: 8.5.5-full
-          -
-            php_version: "7.4"
-            composer_version: "1"
-            c5_archive: https://marketplace.concretecms.com/download_file/-/view/115589/
-            c5_startingpoint: elemental_blank
-            image_tag: 8.5.5
-          -
-            php_version: "7.4"
-            composer_version: "1"
-            c5_archive: https://marketplace.concretecms.com/download_file/-/view/113632/8497/
-            c5_startingpoint: elemental_full
-            image_tag: 8.5.4-full
-          -
-            php_version: "7.4"
-            composer_version: "1"
-            c5_archive: https://marketplace.concretecms.com/download_file/-/view/113632/8497/
-            c5_startingpoint: elemental_blank
-            image_tag: 8.5.4
-          -
-            php_version: "7.4"
-            composer_version: "1"
-            c5_archive: https://marketplace.concretecms.com/download_file/-/view/111592/8497/
-            c5_startingpoint: elemental_full
-            image_tag: 8.5.2-full
-          -
-            php_version: "7.4"
-            composer_version: "1"
-            c5_archive: https://marketplace.concretecms.com/download_file/-/view/111592/8497/
-            c5_startingpoint: elemental_blank
-            image_tag: 8.5.2
-          -
-            php_version: "5.6"
-            composer_version: "1"
-            c5_archive: https://marketplace.concretecms.com/download_file/-/view/93075/8497/
-            c5_startingpoint: elemental_full
-            image_tag: 5.7.5.13-full
-            additional_tags: "5.7-full 5.7.5-full"
-          -
-            php_version: "5.6"
-            composer_version: "1"
-            c5_archive: https://marketplace.concretecms.com/download_file/-/view/93075/8497/
-            c5_startingpoint: elemental_blank
-            image_tag: 5.7.5.13
-            additional_tags: "5.7 5.7.5"
+        data: ${{ fromJSON(needs.generate_matrix.outputs.generated-matrix) }}
     steps:
       - name: Checkout
         uses: actions/checkout@v3
