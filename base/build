@@ -66,16 +66,23 @@ apt-get install -yqq --no-install-recommends nginx
 printTitle 'Installing Composer'
 mkdir -p /var/www/.composer
 chown -R www-data:www-data /var/www/.composer
-
 curl -sSLf -o /tmp/composer-installer https://getcomposer.org/installer
 php /tmp/composer-installer --install-dir=/usr/local/bin --filename=composer1 --1
 update-alternatives --quiet --install /usr/local/bin/composer composer /usr/local/bin/composer1 10
 php /tmp/composer-installer --install-dir=/usr/local/bin --filename=composer2 --2
 update-alternatives --quiet --install /usr/local/bin/composer composer /usr/local/bin/composer2 20
 rm /tmp/composer-installer
-
 switch-composer 1
 (sudo -H -u www-data -- composer clear-cache || true)
+
+printTitle 'Installing PHPUnit'
+for v in $(seq 4 10); do
+    echo "- PHPUnit $v"
+    curl -sSLf -o /usr/local/bin/phpunit$v https://phar.phpunit.de/phpunit-$v.phar
+    chmod +x /usr/local/bin/phpunit$v
+    update-alternatives --quiet --install /usr/local/bin/phpunit phpunit /usr/local/bin/phpunit$v $v
+done
+switch-phpunit 8
 
 printTitle 'Configuring database'
 sed -i -r 's/^(\s*bind-address\s*=\s*)127\.0\.0\.1(\s*)$/\10.0.0.0\2/' /etc/mysql/my.cnf

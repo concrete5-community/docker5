@@ -67,6 +67,22 @@ From within the container you can use the `switch-composer` command:
 switch-composer 2
 ```
 
+## PHPUnit Versions
+
+Every docker image contains many PHPUnit versions.
+
+When using the default entry point you can override the default one by specifying the `CCM_PHPUNIT_VERSION` environment variable, like this:
+
+```bash
+docker run --rm -e "CCM_PHPUNIT_VERSION=10" ghcr.io/concrete5-community/docker5:9.0.2-full
+```
+
+From within the container you can use the `switch-phpunit` command:
+
+```bash
+switch-phpunit 10
+```
+
 ## Starting/stopping services
 
 The default entry point will start the database and web services at startup, and stop them at shutdown.
