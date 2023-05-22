@@ -12,6 +12,12 @@ if test -n "${CCM_COMPOSER_VERSION:-}"; then
     fi
 fi
 
+if test -n "${CCM_PHPUNIT_VERSION:-}"; then
+    if ! switch-phpunit "$CCM_PHPUNIT_VERSION"; then
+        exit 1
+    fi
+fi
+
 if ! ccm-service start; then
     echo 'Failed to start services' >&2
     ccm-service stop >/dev/null 2>&1
@@ -46,6 +52,7 @@ EOF
         rc=$?
     fi
 else
+    ccm-help
     bash -c "$*"
     rc=$?
 fi

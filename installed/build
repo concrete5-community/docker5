@@ -41,6 +41,13 @@ if ! test -d concrete/vendor; then
     sudo -H -u www-data -- composer install --optimize-autoloader --no-cache
 fi
 
+printTitle 'Configuring PHPUnit'
+printf '(PHPUnit version: %s)\n' "$CCM_PHPUNIT_VERSION"
+if [ -f /app/concrete/vendor/phpunit/phpunit/phpunit ]; then
+    update-alternatives --quiet --install /usr/local/bin/phpunit phpunit /app/concrete/vendor/phpunit/phpunit/phpunit 9999
+fi
+switch-phpunit "$CCM_PHPUNIT_VERSION"
+
 printTitle 'Installing Concrete'
 c5 c5:install \
     --db-server=localhost \

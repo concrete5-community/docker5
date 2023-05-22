@@ -12,6 +12,7 @@ COPY assets/ccm-help /usr/local/bin/
 COPY assets/ccm-service /usr/local/bin/
 COPY assets/switch-php /usr/local/bin/
 COPY assets/switch-composer /usr/local/bin/
+COPY assets/switch-phpunit /usr/local/bin/
 COPY assets/entrypoint.sh /
 COPY assets/bashrc /root/.bashrc
 COPY build /

@@ -1,0 +1,48 @@
+#!/bin/sh
+set -o nounset
+set -o errexit
+
+script_name=$0
+
+ccmVersion=/app/concrete/vendor/phpunit/phpunit/phpunit
+installedVersions="$(update-alternatives --list phpunit | grep -E '^/usr/local/bin/phpunit.' | sed -E 's/\/usr\/local\/bin\/phpunit([0-9]+(\.[0-9]+)?)$/\1/' | sort --version-sort)"
+if update-alternatives --list phpunit | grep -q "$ccmVersion"; then
+    installedVersions="$(printf '%s\nccm' "$installedVersions")"
+fi
+exitWithSyntax() {
+    printf 'Syntax: %s <version>\n\nSwitch the currently active PHPUnit version.\nAvailable versions:\n%s\n' "$script_name" "$installedVersions" >&2
+    exit 1
+}
+
+version=
+while :; do
+    if test $# -lt 1; then
+        break
+    fi
+    if test "$version" != ''; then
+        exitWithSyntax
+    fi
+    for installedVersion in $installedVersions; do
+        if test "$1" = "$installedVersion"; then
+            version=$installedVersion
+            break
+        fi
+    done
+    if test "$version" = ''; then
+        printf 'PHPUnit version not available: %s\nAvailable versions:\n%s\n' "$1" "$installedVersions" >&2
+        exit 1
+    fi
+    shift
+done
+if test "$version" = ''; then
+    exitWithSyntax
+fi
+
+case "$version" in
+    ccm)
+        update-alternatives --set phpunit "$ccmVersion" >/dev/null 2>/dev/null
+        ;;
+    *)
+        update-alternatives --set phpunit /usr/local/bin/phpunit$version >/dev/null 2>/dev/null
+        ;;
+esac
