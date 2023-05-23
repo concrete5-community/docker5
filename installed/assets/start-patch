@@ -1,0 +1,23 @@
+
+/*
+ * This is a patch for concrete5 v8 and ConcreteCMS v9 (up to 9.2.0) to support C5_ENVIRONMENT_ONLY
+*/
+if (defined('C5_ENVIRONMENT_ONLY') && C5_ENVIRONMENT_ONLY) {
+    class C5EnvironmentOnlyFakeException extends RuntimeException
+    {
+    }
+    class C5EnvironmentOnlyCLIRunner extends Concrete\Core\Foundation\Runtime\Run\CLIRunner
+    {
+        public function run()
+        {
+            try {
+                return parent::run();
+            } catch (C5EnvironmentOnlyFakeException $_) {
+                return null;
+            }
+        }
+    }
+    $app->bind(Concrete\Core\Foundation\Runtime\Run\CLIRunner::class, C5EnvironmentOnlyCLIRunner::class);
+}
+
+return $app;

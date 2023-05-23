@@ -144,7 +144,15 @@ jobs:
         run: docker load --input /tmp/base-image.tgz
       - name: Build with starting point ${{ matrix.data.c5_startingpoint }}
         run: |
-          docker build --build-arg CCM_PHP_VERSION=${{ matrix.data.php_version }} --build-arg CCM_COMPOSER_VERSION=${{ matrix.data.composer_version }} --build-arg CCM_PHPUNIT_VERSION=${{ matrix.data.phpunit_version }} --build-arg CCM_C5_ARCHIVE=${{ matrix.data.c5_archive }} --build-arg CCM_STARTING_POINT=${{ matrix.data.c5_startingpoint }} --tag ghcr.io/concrete5-community/docker5:${{ matrix.data.image_tag }} ./installed
+          docker build \
+              --build-arg CCM_PHP_VERSION=${{ matrix.data.php_version }} \
+              --build-arg CCM_COMPOSER_VERSION=${{ matrix.data.composer_version }} \
+              --build-arg CCM_PHPUNIT_VERSION=${{ matrix.data.phpunit_version }} \
+              --build-arg CCM_C5_ARCHIVE=${{ matrix.data.c5_archive }} \
+              --build-arg CCM_STARTING_POINT=${{ matrix.data.c5_startingpoint }} \
+              --build-arg CCM_PATCH_ENVIRONMENT_ONLY=${{ matrix.data.patch_environment_only }} \
+              --tag ghcr.io/concrete5-community/docker5:${{ matrix.data.image_tag }} \
+              ./installed
           for additional_tag in ${{ matrix.data.additional_tags }}; do
             docker tag ghcr.io/concrete5-community/docker5:${{ matrix.data.image_tag }} ghcr.io/concrete5-community/docker5:$additional_tag
           done

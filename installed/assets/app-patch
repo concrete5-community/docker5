@@ -1,0 +1,9 @@
+
+/*
+ * This is a patch for concrete5 v8 and ConcreteCMS v9 (up to 9.2.0) to support C5_ENVIRONMENT_ONLY
+*/
+if (defined('C5_ENVIRONMENT_ONLY') && C5_ENVIRONMENT_ONLY) {
+    $app->make('director')->addListener('on_before_console_run', static function() {
+        throw new C5EnvironmentOnlyFakeException();
+    });
+}
