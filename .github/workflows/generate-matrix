@@ -108,6 +108,8 @@ readonly class Version
 
     public string $fullStartingPoint;
 
+    public bool $patchEnvironmentOnly;
+
     public function __construct(string $version,  public string $archiveUrl)
     {
         if ($version === VERSIONID_DEVELOP) {
@@ -155,6 +157,14 @@ readonly class Version
         } else {
             $this->fullStartingPoint = 'elemental_full';
         }
+        if ($this->versions === [VERSIONID_DEVELOP]) {
+            $this->patchEnvironmentOnly = false;
+        } elseif (version_compare($this->versions[0], '8') >= 0 && version_compare($this->versions[0], '9.2.0') <= 0) {
+            $this->patchEnvironmentOnly = true;
+        } else {
+            $this->patchEnvironmentOnly = false;
+        }
+
     }
 
     public function serialize(array &$result, array &$alreadySerializedVersions): void
@@ -182,6 +192,7 @@ readonly class Version
             'phpunit_version' => $this->phpunitVersion,
             'c5_archive' => $this->archiveUrl,
             'c5_startingpoint' => $full ? $this->fullStartingPoint : $this->blankStartingPoint,
+            'patch_environment_only' => $this->patchEnvironmentOnly ? 'Y' : 'N',
             'image_tag' => array_shift($versions),
             'additional_tags' => implode(' ', $versions),
         ];

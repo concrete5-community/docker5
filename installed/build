@@ -41,6 +41,14 @@ if ! test -d concrete/vendor; then
     sudo -H -u www-data -- composer install --optimize-autoloader --no-cache
 fi
 
+if [ "${CCM_PATCH_ENVIRONMENT_ONLY:-}" = Y ]; then
+    printTitle 'Patching Concrete for C5_ENVIRONMENT_ONLY support'
+    sed -Ei 's/^return \$app;//' /app/application/bootstrap/start.php
+    cat /tmp/start-patch >>/app/application/bootstrap/start.php
+    cat /tmp/app-patch >>/app/application/bootstrap/app.php
+fi
+rm -f /tmp/start-patch /tmp/app-patch
+
 printTitle 'Configuring PHPUnit'
 printf '(PHPUnit version: %s)\n' "$CCM_PHPUNIT_VERSION"
 if [ -f /app/concrete/vendor/phpunit/phpunit/phpunit ]; then
