@@ -161,7 +161,7 @@ jobs:
           docker run --rm --entrypoint='' ghcr.io/concrete5-community/docker5:${{ matrix.data.image_tag }} ccm-service start db
       - name: Remove base Docker image
         if: needs.check_envoronment.outputs.action == 'publish'
-        run: docker rmi ghcr.io/concrete5-community/docker5:base
+        run: docker rmi ghcr.io/concrete5-community/docker5:base || true
       - name: Login to the Docker container registry
         if: needs.check_envoronment.outputs.action == 'publish'
         uses: docker/login-action@v2
