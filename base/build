@@ -51,7 +51,7 @@ unset PHP_VERSION
 unset PHP_EXTENSION
 
 printTitle 'Installing NodeJS'
-curl -sSL https://deb.nodesource.com/setup_16.x | bash -
+curl -sSL https://deb.nodesource.com/setup_18.x | bash -
 apt-get install -yqq --no-install-recommends nodejs
 npm -g install grunt-cli
 
