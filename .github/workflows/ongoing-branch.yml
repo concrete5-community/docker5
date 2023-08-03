@@ -36,7 +36,7 @@ jobs:
         run: ./.github/workflows/ongoing-branch-check ${{ matrix.data.c5_startingpoint }}
       - name: Fetch base Docker image
         if: steps.check.outputs.BUILD_SHA1
-        run: echo docker pull ghcr.io/concrete5-community/docker5:base
+        run: docker pull ghcr.io/concrete5-community/docker5:base
       - name: Build with starting point ${{ matrix.data.c5_startingpoint }}
         if: steps.check.outputs.BUILD_SHA1
         run: >
