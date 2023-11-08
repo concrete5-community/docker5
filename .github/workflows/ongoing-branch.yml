@@ -67,3 +67,10 @@ jobs:
         env:
           BUILT_SHA1: ${{ steps.check.outputs.BUILD_SHA1 }}
         run: ./.github/workflows/ongoing-branch-updated ${{ matrix.data.c5_startingpoint }}
+      - name: Notify failures
+        if: failure()
+        uses: appleboy/telegram-action@master
+        with:
+          token: ${{ secrets.TELEGRAM_TOKEN }}
+          to: '-1001989057474'
+          message: Building ongoing branches failed on https://github.com/concrete5-community/docker5/actions/runs/${{ github.run_id }}
