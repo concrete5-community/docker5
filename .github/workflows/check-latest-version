@@ -3,7 +3,11 @@
 
 declare(strict_types=1);
 
-const DOWNLOADS_URL = 'https://marketplace.concretecms.com/developer-downloads/';
+const DOWNLOADS_URLS = [
+    'https://www.concretecms.org/download/archive',
+    'https://marketplace.concretecms.com/developer-downloads/',
+];
+
 const VERSIONID_DEVELOP = 'develop';
 
 set_error_handler(static function ($errno, $errstr, $errfile, $errline) {
@@ -14,8 +18,15 @@ function main(): void
 {
     $dataFile = __DIR__ . '/../../data/versions.json';
     $localVersions = readDataFile($dataFile);
-    $doc = fetchDoc();
-    $onlineVersions = extractOnlineVersions($doc);
+    $onlineVersions = [];
+    foreach (DOWNLOADS_URLS as $downloadsUrl) {
+        $doc = fetchDoc($downloadsUrl);
+        $onlineVersions += extractOnlineVersions($doc, $downloadsUrl);
+    }
+    uksort(
+        $onlineVersions,
+        static fn (string $a, string $b): int => version_compare($b, $a)
+    );
     $newOnlineVersions = filterOnlineVersions($onlineVersions, array_keys($localVersions));
     if ($newOnlineVersions === []) {
         echo 'No new online versions found';
@@ -62,11 +73,11 @@ function readDataFile(string $jsonFilePath): array
     return $data;
 }
 
-function fetchDoc(): DOMDocument
+function fetchDoc(string $downloadsUrl): DOMDocument
 {
-    $html = file_get_contents(DOWNLOADS_URL);
+    $html = file_get_contents($downloadsUrl);
     if ($html === false) {
-        throw new RuntimeException("Failed to fetch from '" . DOWNLOADS_URL . "'");
+        throw new RuntimeException("Failed to fetch from '{$downloadsUrl}'");
     }
     $doc = new DOMDocument();
     set_error_handler(static function() {}, -1);
@@ -76,17 +87,17 @@ function fetchDoc(): DOMDocument
         restore_error_handler();
     }
     if ($loaded === false) {
-        throw new RuntimeException("Failed to load the HTML fetched from '" . DOWNLOADS_URL . "'");
+        throw new RuntimeException("Failed to load the HTML fetched from '{$downloadsUrl}'");
     }
     return $doc;
 }
 
-function extractOnlineVersions(DOMDocument $doc): array
+function extractOnlineVersions(DOMDocument $doc, string $downloadsUrl): array
 {
     $result = [];
     $xpath = new DOMXpath($doc);
     foreach ($xpath->query('/html/body//a') as $link) {
-        $versionData = extractOnlineVersion($link);
+        $versionData = extractOnlineVersion($link, $downloadsUrl);
         if ($versionData === null) {
             continue;
         }
@@ -95,10 +106,6 @@ function extractOnlineVersions(DOMDocument $doc): array
     if ($result === []) {
         throw new RuntimeException('No versions found.');
     }
-    uksort(
-        $result,
-        static fn (string $a, string $b): int => version_compare($b, $a)
-    );
     return $result;
 }
 
@@ -109,7 +116,7 @@ function extractMajorVersion(string $version): string
     return $chunks[0] === '5' ? "{$chunks[0]}.{$chunks[1]}" : $chunks[0];
 }
 
-function extractOnlineVersion(DOMElement $link): ?array
+function extractOnlineVersion(DOMElement $link, string $downloadsUrl): ?array
 {
     $linkContent = trim(preg_replace('/\s+/u', ' ', $link->textContent));
     if (strcasecmp($linkContent, 'Download') !== 0) {
@@ -120,20 +127,28 @@ function extractOnlineVersion(DOMElement $link): ?array
         return null;
     }
     if (strpos($url, '//') === 0) {
-        $url = parse_url(DOWNLOADS_URL, PHP_URL_SCHEME) . ':' . $url;
+        $url = parse_url($downloadsUrl, PHP_URL_SCHEME) . ':' . $url;
     } elseif ($url[0] === '/') {
-        $pageUrl = parse_url(DOWNLOADS_URL);
+        $pageUrl = parse_url($downloadsUrl);
         $prefix = "{$pageUrl['scheme']}://{$pageUrl['host']}";
         if (!empty($prefix['port'])) {
             $prefix .= ":{$prefix['port']}";
         }
         $url = $prefix . $url;
     }
-    $parentContent = trim(preg_replace('/\s+/u', ' ', $link->parentNode->textContent));
-    if (!preg_match('/^(?<version>(5\.)?\d+\.\d+\.\d+) \(\d{1,2}-\d{1,2}-\d{4}\)( .)? Download$/i', $parentContent, $matches)) {
+    if (strpos($downloadsUrl, $url) === 0 && strlen($url) < strlen($downloadsUrl)) {
         return null;
     }
-    return [$matches['version'], $url];
+    $parentContent = trim(preg_replace('/\s+/u', ' ', $link->parentNode->textContent));
+    $matches = null;
+    if (preg_match('/^(?<version>(5\.)?\d+\.\d+\.\d+) \(\d{1,2}-\d{1,2}-\d{4}\)( .)? Download$/i', $parentContent, $matches)) {
+        return [$matches['version'], $url];
+    }
+    $grandParentContent = trim(preg_replace('/\s+/u', ' ', $link->parentNode->parentNode->textContent));
+    if (preg_match('/^(?<version>(5\.)?\d+\.\d+\.\d+) /i', $grandParentContent, $matches)) {
+        return [$matches['version'], $url];
+    }
+    return null;
 }
 
 function filterOnlineVersions(array $onlineVersions, array $localVersions): array
@@ -155,7 +170,7 @@ function filterOnlineVersions(array $onlineVersions, array $localVersions): arra
         }
     }
     $majorVersions = [];
-    foreach ($onlineVersions as $version => $url) {
+    foreach (array_keys($onlineVersions) as $version) {
         $major = extractMajorVersion($version);
         if (!isset($majorVersions[$major]) || version_compare($version, $majorVersions[$major]) >= 0) {
             $majorVersions[$major] = $version;
