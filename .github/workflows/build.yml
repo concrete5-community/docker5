@@ -23,13 +23,15 @@ on:
       - publish
 
 jobs:
+
   check_envoronment:
     name: Check environment
     runs-on: ubuntu-latest
     outputs:
       action: ${{ steps.inspect.outputs.action }}
     steps:
-      - name: Inspect environment
+      -
+        name: Inspect environment
         id: inspect
         run: |
           action=none
@@ -63,7 +65,8 @@ jobs:
               ;;
           esac
           echo "action=$action" >> $GITHUB_OUTPUT
-      - name: Print environment info
+      -
+        name: Print environment info
         run: |
           printf 'github.event_name: %s\n' "${{ github.event_name }}"
           printf 'github.ref: %s\n' "${{ github.ref }}"
@@ -76,27 +79,33 @@ jobs:
     runs-on: ubuntu-latest
     if: needs.check_envoronment.outputs.action != 'none'
     steps:
-      - name: Checkout
+      -
+        name: Checkout
         uses: actions/checkout@v3
-      - name: Build
+      -
+        name: Build
         run: docker build --force-rm --rm --tag ghcr.io/concrete5-community/docker5:base ./base
-      - name: Save base Docker image
+      -
+        name: Save base Docker image
         if: needs.check_envoronment.outputs.action == 'build'
         run: docker save ghcr.io/concrete5-community/docker5:base | gzip > /tmp/base-image.tgz
-      - name: Upload artifact
+      -
+        name: Upload artifact
         if: needs.check_envoronment.outputs.action == 'build'
         uses: actions/upload-artifact@v3
         with:
           name: base-image
           path: /tmp/base-image.tgz
-      - name: Login to the Docker container registry
+      -
+        name: Login to the Docker container registry
         if: needs.check_envoronment.outputs.action == 'publish'
         uses: docker/login-action@v2
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-      - name: Publish image
+      -
+        name: Publish image
         if: needs.check_envoronment.outputs.action == 'publish'
         run: docker push ghcr.io/concrete5-community/docker5:base
 
@@ -106,18 +115,21 @@ jobs:
     outputs:
       generated-matrix: ${{ steps.generate-matrix.outputs.generated-matrix }}
     steps:
-      - name: Setup PHP
+      -
+        name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
           php-version: '8.2'
           extensions: none
           tools: none
           coverage: none
-      - name: Checkout
+      -
+        name: Checkout
         uses: actions/checkout@v3
-      - name: Generate matrix
+      -
+        name: Generate matrix
         id: generate-matrix
-        run: ./.github/workflows/generate-matrix "$GITHUB_OUTPUT"
+        run: ./.github/workflows/generate-matrix build.yml "$GITHUB_OUTPUT"
 
   build:
     name: Build ${{ matrix.data.image_tag }}
@@ -131,18 +143,22 @@ jobs:
       matrix:
         data: ${{ fromJSON(needs.generate_matrix.outputs.generated-matrix) }}
     steps:
-      - name: Checkout
+      -
+        name: Checkout
         uses: actions/checkout@v3
-      - name: Download base image
+      -
+        name: Download base image
         if: needs.check_envoronment.outputs.action == 'build'
         uses: actions/download-artifact@v3
         with:
           name: base-image
           path: /tmp/
-      - name: Load base image
+      -
+        name: Load base image
         if: needs.check_envoronment.outputs.action == 'build'
         run: docker load --input /tmp/base-image.tgz
-      - name: Build with starting point ${{ matrix.data.c5_startingpoint }}
+      -
+        name: Build with starting point ${{ matrix.data.c5_startingpoint }}
         run: |
           docker build \
               --build-arg CCM_PHP_VERSION=${{ matrix.data.php_version }} \
@@ -156,19 +172,22 @@ jobs:
           for additional_tag in ${{ matrix.data.additional_tags }}; do
             docker tag ghcr.io/concrete5-community/docker5:${{ matrix.data.image_tag }} ghcr.io/concrete5-community/docker5:$additional_tag
           done
-      - name: Check that MariaDB works
-        run: |
-          docker run --rm --entrypoint='' ghcr.io/concrete5-community/docker5:${{ matrix.data.image_tag }} ccm-service start db
-      - name: Remove base Docker image
+      -
+        name: Check that MariaDB works
+        run: docker run --rm --entrypoint='' ghcr.io/concrete5-community/docker5:${{ matrix.data.image_tag }} ccm-service start db
+      -
+        name: Remove base Docker image
         if: needs.check_envoronment.outputs.action == 'publish'
         run: docker rmi ghcr.io/concrete5-community/docker5:base || true
-      - name: Login to the Docker container registry
+      -
+        name: Login to the Docker container registry
         if: needs.check_envoronment.outputs.action == 'publish'
         uses: docker/login-action@v2
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-      - name: Publish image
+      -
+        name: Publish image
         if: needs.check_envoronment.outputs.action == 'publish'
         run: docker push  --all-tags ghcr.io/concrete5-community/docker5

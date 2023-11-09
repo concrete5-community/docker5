@@ -11,15 +11,16 @@ if test -z "${GITHUB_REPOSITORY:-}"; then
     echo 'GITHUB_REPOSITORY environment variable not set' >&2
     exit 1
 fi
-if test -z "${DOCKER5_BUILDBRANCH:-}"; then
-    echo 'DOCKER5_BUILDBRANCH environment variable not set' >&2
-    exit 1
-fi
 if test -z "${BUILT_SHA1:-}"; then
     echo 'BUILT_SHA1 environment variable not set' >&2
     exit 1
 fi
-STARTING_POINT="${1:-}"
+REPO_BRANCH="${1:-}"
+if test -z "$REPO_BRANCH"; then
+    echo 'Missing repository branch argument' >&2
+    exit 1
+fi
+STARTING_POINT="${2:-}"
 if test -z "$STARTING_POINT"; then
     echo 'Missing starting point argument' >&2
     exit 1
@@ -27,23 +28,23 @@ fi
 
 AUTHOR_NAME='Michele Locati'
 AUTHOR_EMAIL='michele@locati.it'
-COMMIT_MESSAGE="[skip ci] Save state of last built $DOCKER5_BUILDBRANCH branch"
-REPO_BRANCH='main'
+COMMIT_MESSAGE="[skip ci] Save state of last built $REPO_BRANCH branch ($STARTING_POINT)"
+DOCKER5_REPO_BRANCH='main'
 
-printf 'Checking-out branch %s\n' "$REPO_BRANCH"
-git checkout --force "$REPO_BRANCH"
+printf 'Checking-out branch %s\n' "$DOCKER5_REPO_BRANCH"
+git checkout --force "$DOCKER5_REPO_BRANCH"
 
 printf 'Pulling from remote'
-git pull --ff-only origin "$REPO_BRANCH"
+git pull --ff-only origin "$DOCKER5_REPO_BRANCH"
 
 printf 'Saving state\n'
 mkdir -p "$GITHUB_WORKSPACE/state"
-printf '%s' "$BUILT_SHA1" >"$GITHUB_WORKSPACE/state/$DOCKER5_BUILDBRANCH-$STARTING_POINT.sha1"
+printf '%s' "$BUILT_SHA1" >"$GITHUB_WORKSPACE/state/$REPO_BRANCH-$STARTING_POINT.sha1"
 
 echo 'Committing changes to README.md'
 git config --local user.name "$AUTHOR_NAME"
 git config --local user.email "$AUTHOR_EMAIL"
-git add "$GITHUB_WORKSPACE/state/$DOCKER5_BUILDBRANCH-$STARTING_POINT.sha1"
+git add "$GITHUB_WORKSPACE/state/$REPO_BRANCH-$STARTING_POINT.sha1"
 git commit -m "$COMMIT_MESSAGE"
 
 printf 'Pushing to %s\n' "$GITHUB_REPOSITORY"

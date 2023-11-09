@@ -8,62 +8,98 @@ on:
       - build-ongoing
 
 jobs:
-  build:
+
+  generate_matrix:
+    name: Generate matrix
     runs-on: ubuntu-latest
-    env:
-      DOCKER5_BUILDBRANCH: develop
+    outputs:
+      generated-matrix: ${{ steps.generate-matrix.outputs.generated-matrix }}
+    steps:
+      -
+        name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          extensions: none
+          tools: none
+          coverage: none
+      -
+        name: Checkout
+        uses: actions/checkout@v3
+      -
+        name: Generate matrix
+        id: generate-matrix
+        run: ./.github/workflows/generate-matrix ongoing-branch.yml "$GITHUB_OUTPUT"
+
+  build:
+    name: Build ${{ matrix.data.image_tag }}
+    runs-on: ubuntu-latest
+    needs:
+      - generate_matrix
     strategy:
       matrix:
-        data:
-          - php_version: "8.1"
-            composer_version: "2"
-            phpunit_version: ccm
-            c5_startingpoint: atomik_full
-            image_tag: develop-full
-          - php_version: "8.1"
-            composer_version: "2"
-            phpunit_version: ccm
-            c5_startingpoint: atomik_blank
-            image_tag: develop
-    name: Update ongoing Docker image
+        data: ${{ fromJSON(needs.generate_matrix.outputs.generated-matrix) }}
     steps:
-      - name: Checkout
+      -
+        name: Checkout
         uses: actions/checkout@v3
         with:
           fetch-depth: 0
-      - name: Check if build is needed for ${{ matrix.data.c5_startingpoint }}
+      -
+        name: Check if build is needed
         id: check
-        run: ./.github/workflows/ongoing-branch-check ${{ matrix.data.c5_startingpoint }}
-      - name: Fetch base Docker image
+        run: ./.github/workflows/ongoing-branch-check ${{ matrix.data.repo_branch }} ${{ matrix.data.c5_startingpoint }}
+      -
+        name: Fetch base Docker image
         if: steps.check.outputs.BUILD_SHA1
         run: docker pull ghcr.io/concrete5-community/docker5:base
-      - name: Build with starting point ${{ matrix.data.c5_startingpoint }}
+      -
+        name: Build with starting point ${{ matrix.data.c5_startingpoint }}
         if: steps.check.outputs.BUILD_SHA1
-        run: >
-          docker build
-          --build-arg CCM_PHP_VERSION=${{ matrix.data.php_version }}
-          --build-arg CCM_COMPOSER_VERSION=${{ matrix.data.composer_version }}
-          --build-arg CCM_PHPUNIT_VERSION=${{ matrix.data.phpunit_version }}
-          --build-arg CCM_C5_ARCHIVE=https://codeload.github.com/concretecms/concretecms/tar.gz/${{ steps.check.outputs.BUILD_SHA1 }}
-          --build-arg CCM_STARTING_POINT=${{ matrix.data.c5_startingpoint }}
-          --build-arg CCM_PATCH_ENVIRONMENT_ONLY=N
-          --tag ghcr.io/concrete5-community/docker5:${{ matrix.data.image_tag }}
-          ./installed
-      - name: Check that MariaDB works
+        run: |
+          docker build \
+              --build-arg CCM_PHP_VERSION=${{ matrix.data.php_version }} \
+              --build-arg CCM_COMPOSER_VERSION=${{ matrix.data.composer_version }} \
+              --build-arg CCM_PHPUNIT_VERSION=${{ matrix.data.phpunit_version }} \
+              --build-arg CCM_C5_ARCHIVE=https://codeload.github.com/concretecms/concretecms/tar.gz/${{ steps.check.outputs.BUILD_SHA1 }} \
+              --build-arg CCM_STARTING_POINT=${{ matrix.data.c5_startingpoint }} \
+              --build-arg CCM_PATCH_ENVIRONMENT_ONLY=${{ matrix.data.patch_environment_only }} \
+              --tag ghcr.io/concrete5-community/docker5:${{ matrix.data.image_tag }} \
+              ./installed
+          for additional_tag in ${{ matrix.data.additional_tags }}; do
+            docker tag ghcr.io/concrete5-community/docker5:${{ matrix.data.image_tag }} ghcr.io/concrete5-community/docker5:$additional_tag
+          done
+      -
+        name: Check that MariaDB works
         if: steps.check.outputs.BUILD_SHA1
         run: docker run --rm --entrypoint='' ghcr.io/concrete5-community/docker5:${{ matrix.data.image_tag }} ccm-service start db
-      - name: Login to the Docker container registry
+      -
+        name: Remove base Docker image
+        if: steps.check.outputs.BUILD_SHA1
+        run: docker rmi ghcr.io/concrete5-community/docker5:base || true
+      -
+        name: Login to the Docker container registry
         if: steps.check.outputs.BUILD_SHA1
         uses: docker/login-action@v2
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-      - name: Publish image
+      -
+        name: Publish image
         if: steps.check.outputs.BUILD_SHA1
-        run: docker push ghcr.io/concrete5-community/docker5:${{ matrix.data.image_tag }}
-      - name: Update repository
+        run: docker push  --all-tags ghcr.io/concrete5-community/docker5
+      -
+        name: Update repository
         if: steps.check.outputs.BUILD_SHA1
         env:
           BUILT_SHA1: ${{ steps.check.outputs.BUILD_SHA1 }}
-        run: ./.github/workflows/ongoing-branch-updated ${{ matrix.data.c5_startingpoint }}
+        run: ./.github/workflows/ongoing-branch-updated ${{ matrix.data.repo_branch }} ${{ matrix.data.c5_startingpoint }}
+      -
+        name: Notify failures
+        if: failure()
+        uses: appleboy/telegram-action@master
+        with:
+          token: ${{ secrets.TELEGRAM_TOKEN }}
+          to: '-1001989057474'
+          message: Building ongoing branches failed on https://github.com/concrete5-community/docker5/actions/runs/${{ github.run_id }}

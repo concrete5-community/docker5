@@ -8,23 +8,28 @@ on:
       - check-last-version
 
 jobs:
+
   check:
     runs-on: ubuntu-latest
     name: check-last-version
     steps:
-      - name: Checkout
+      -
+        name: Checkout
         uses: actions/checkout@v3
         with:
           fetch-depth: 0
-      - name: Setup PHP
+      -
+        name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
           php-version: '8.2'
           tools: none
           coverage: none
-      - name: Check new online versions
+      -
+        name: Check new online versions
         run: ./.github/workflows/check-latest-version
-      - name: Check changes
+      -
+        name: Check changes
         id: check
         run: |
           if git diff --exit-code ./data/versions.json; then
@@ -33,7 +38,8 @@ jobs:
           else
             echo "changed=yes" >>"$GITHUB_OUTPUT"
           fi
-      - name: Create pull request
+      -
+        name: Create pull request
         if: steps.check.outputs.changed == 'yes'
         uses: peter-evans/create-pull-request@v5
         with:
@@ -46,7 +52,8 @@ jobs:
             Automated pull request created by https://github.com/concrete5-community/docker5/actions/runs/${{ github.run_id }}
 
             Please close this pull request and reopen it in order to run the GitHub Actions.
-      - name: Notify failures
+      -
+        name: Notify failures
         if: failure()
         uses: appleboy/telegram-action@master
         with:
