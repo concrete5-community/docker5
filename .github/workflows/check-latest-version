@@ -8,7 +8,7 @@ const DOWNLOADS_URLS = [
     'https://marketplace.concretecms.com/developer-downloads/',
 ];
 
-const VERSIONID_DEVELOP = 'develop';
+const DEV_VERSIONS_SUFFIX = '.x';
 
 set_error_handler(static function ($errno, $errstr, $errfile, $errline) {
     throw new RuntimeException("Error {$errno}: {$errstr}\nFile: {$errfile}\nLine: {$errline}");
@@ -35,11 +35,11 @@ function main(): void
     echo "New versions detected:\n- " . implode("\n- ", array_keys($newOnlineVersions)) . "\n";
     $localVersions += $newOnlineVersions;
     uksort($localVersions, static function (string $a, string $b): int {
-        if ($b === VERSIONID_DEVELOP) {
-            return -1;
+        if (str_ends_with($a, DEV_VERSIONS_SUFFIX)) {
+            $a = substr($a, -strlen(DEV_VERSIONS_SUFFIX)) . '.999';
         }
-        if ($a === VERSIONID_DEVELOP) {
-            return 1;
+        if (str_ends_with($b, DEV_VERSIONS_SUFFIX)) {
+            $b = substr($b, -strlen(DEV_VERSIONS_SUFFIX)) . '.999';
         }
         return version_compare($a, $b);
     });
@@ -155,7 +155,7 @@ function filterOnlineVersions(array $onlineVersions, array $localVersions): arra
 {
     $localMajorVersions = [];
     foreach ($localVersions as $version) {
-        if ($version === VERSIONID_DEVELOP) {
+        if (str_ends_with($version, DEV_VERSIONS_SUFFIX)) {
             continue;
         }
         $major = extractMajorVersion($version);

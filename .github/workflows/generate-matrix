@@ -7,16 +7,23 @@ set_error_handler(static function ($errno, $errstr, $errfile, $errline) {
     throw new RuntimeException("Error {$errno}: {$errstr}\nFile: {$errfile}\nLine: {$errline}");
 }, -1);
 
-const VERSIONID_DEVELOP = 'develop';
+const DEV_VERSIONS_SUFFIX = '.x';
 const VERSIONID_LATEST = 'latest';
 
-function main(string $outputFile): void
+enum Workflow: string
 {
+    case Build = 'build.yml';
+    case OngoingBranch = 'ongoing-branch.yml';
+}
+
+function main(string $workflowID, string $outputFile): void
+{
+    $workflow = Workflow::tryFrom($workflowID) ?? throw new RuntimeException("Unrecognized workflow: '{$workflowID}'");
     if ($outputFile === '') {
         throw new RuntimeException('Failed to detect the GitHub Actions output file');
     }
     $versions = readDataFile(__DIR__ . '/../../data/versions.json');
-    $serialized = $versions->serialize();
+    $serialized = $versions->serialize($workflow);
     $json = json_encode($serialized, JSON_PRETTY_PRINT | JSON_UNESCAPED_LINE_TERMINATORS | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR);
     echo "Genetated matrix:\n{$json}\n";
     file_put_contents($outputFile, "generated-matrix<<EOF\n{$json}\nEOF\n", FILE_APPEND);
@@ -69,23 +76,19 @@ class Versions
             $list[] = new Version($version, $archiveUrl);
         }
         usort($list, static function (Version $a, Version $b): int {
-            if ($a->versions === [VERSIONID_DEVELOP]) {
-                return -1;
-            }
-            if ($b->versions === [VERSIONID_DEVELOP]) {
-                return 1;
-            }
-            return version_compare($b->versions[0], $a->versions[0]);
+            return version_compare($b->comparableVersion, $a->comparableVersion);
         });
         $this->list = $list;
     }
 
-    public function serialize(): array
+    public function serialize(Workflow $workflow): array
     {
         $result = [];
         $alreadySerializedVersions = [];
         foreach ($this->list as $version) {
-            $version->serialize($result, $alreadySerializedVersions);
+            if ($workflow === Workflow::Build || $version->isDevVersion) {
+                $version->serialize($result, $alreadySerializedVersions);
+            }
         }
         return $result;
     }
@@ -93,10 +96,13 @@ class Versions
 
 readonly class Version
 {
-    /**
-     * @var string[]
-     */
-    public array $versions;
+    public bool $isDevVersion;
+
+    public string $comparableVersion;
+
+    public int $majorVersion;
+
+    public string $majorMinorVersion;
 
     public string $phpVersion;
 
@@ -110,72 +116,98 @@ readonly class Version
 
     public bool $patchEnvironmentOnly;
 
-    public function __construct(string $version,  public string $archiveUrl)
+    public function __construct(public string $version,  public string $archiveUrl)
     {
-        if ($version === VERSIONID_DEVELOP) {
-            $this->versions = [VERSIONID_DEVELOP];
+        $matches = null;
+        if (str_ends_with($this->version, DEV_VERSIONS_SUFFIX)) {
+            if (!preg_match('/(?<major>\d+)\.(?<minor>\d+)' . preg_quote(DEV_VERSIONS_SUFFIX, '/') . '$/', $this->version, $matches)) {
+                throw new RuntimeException("Invalid development version: {$this->version}");
+            }
+            $this->isDevVersion = true;
+            $this->comparableVersion = "{$matches['major']}.{$matches['minor']}.999";
         } else {
-            if (!preg_match('/(?<major>5\.[\d+])\.(?<minor>\d+)\.(?<patch>\d+)$/', $version, $matches)) {
-                if (!preg_match('/(?<major>\d+)\.(?<minor>\d+)\.(?<patch>\d+)$/', $version, $matches)) {
-                    throw new RuntimeException("Invalid version: {$version}");
+            if (!preg_match('/(?<major>5\.[\d+])\.(?<minor>\d+)\.(?<patch>\d+)$/', $this->version, $matches)) {
+                if (!preg_match('/(?<major>\d+)\.(?<minor>\d+)\.(?<patch>\d+)$/', $this->version, $matches)) {
+                    throw new RuntimeException("Invalid version: {$this->version}");
                 }
             }
-            $this->versions = [
-                $version,
-                "{$matches['major']}.{$matches['minor']}",
-                $matches['major'],
-            ];
+            $this->isDevVersion = false;
+            $this->comparableVersion = $this->version;
         }
-        if ($this->versions === [VERSIONID_DEVELOP] || version_compare($this->versions[0], '9.2') >= 0) {
+        $this->majorVersion = (int) $matches['major'];
+        $this->majorMinorVersion = "{$matches['major']}.{$matches['minor']}";
+
+        if (version_compare($this->majorMinorVersion, '9.2') >= 0) {
             $this->phpVersion = '8.2';
-        } elseif (version_compare($this->versions[0], '9') >= 0) {
+        } elseif ($this->majorVersion >= 9) {
             $this->phpVersion = '8.1';
-        } elseif (version_compare($this->versions[0], '8') >= 0) {
+        } elseif ($this->majorVersion >= 8) {
             $this->phpVersion = '7.4';
         } else {
             $this->phpVersion = '5.6';
         }
-        if ($this->versions === [VERSIONID_DEVELOP] || version_compare($this->versions[0], '9') >= 0) {
+
+        if ($this->majorVersion >= 9) {
             $this->composerVersion = '2';
         } else {
             $this->composerVersion = '1';
         }
-        if ($this->versions === [VERSIONID_DEVELOP]) {
+
+        if (str_ends_with($this->version, DEV_VERSIONS_SUFFIX)) {
             $this->phpunitVersion = 'ccm';
-        } elseif (version_compare($this->versions[0], '9') >= 0) {
+        } elseif ($this->majorVersion >= 9) {
             $this->phpunitVersion = '8';
         } else {
             $this->phpunitVersion = '4';
         }
-        if ($this->versions === [VERSIONID_DEVELOP] || version_compare($this->versions[0], '9.2') >= 0) {
+
+        if (version_compare($this->majorMinorVersion, '9.2') >= 0) {
             $this->blankStartingPoint = 'atomik_blank';
         } else {
             $this->blankStartingPoint = 'elemental_blank';
         }
-        if ($this->versions === [VERSIONID_DEVELOP] || version_compare($this->versions[0], '9') >= 0) {
+
+        if ($this->majorVersion >= 9) {
             $this->fullStartingPoint = 'atomik_full';
         } else {
             $this->fullStartingPoint = 'elemental_full';
         }
-        if ($this->versions === [VERSIONID_DEVELOP]) {
-            $this->patchEnvironmentOnly = false;
-        } elseif (version_compare($this->versions[0], '8') >= 0 && version_compare($this->versions[0], '9.2.0') <= 0) {
+
+        if ($this->majorVersion >= 8 && version_compare($this->comparableVersion, '9.2.0') <= 0) {
             $this->patchEnvironmentOnly = true;
         } else {
             $this->patchEnvironmentOnly = false;
         }
-
     }
 
     public function serialize(array &$result, array &$alreadySerializedVersions): void
     {
-        $newVersions = array_values(array_diff($this->versions, $alreadySerializedVersions));
-        if ($this->versions !== [VERSIONID_DEVELOP] && !in_array(VERSIONID_LATEST, $alreadySerializedVersions, true)) {
+        if ($this->isDevVersion) {
+            $versions = [$this->version];
+            foreach ([
+                $this->majorMinorVersion . DEV_VERSIONS_SUFFIX,
+                $this->majorVersion . DEV_VERSIONS_SUFFIX,
+            ] as $v) {
+                if (!in_array($v, $versions, true)) {
+                    $versions[] = $v;
+                }
+            }
+        } else {
+            $versions = [$this->version, $this->majorMinorVersion, (string) $this->majorVersion];
+        }
+        $newVersions = array_values(array_diff($versions, $alreadySerializedVersions));
+        if ($this->isDevVersion === false && !in_array(VERSIONID_LATEST, $alreadySerializedVersions, true)) {
             $newVersions[] = VERSIONID_LATEST;
         }
         $result[] = $this->serializeVersions($newVersions, false);
         $result[] = $this->serializeVersions($newVersions, true);
         $alreadySerializedVersions = [...$alreadySerializedVersions, ...$newVersions];
+    }
+
+    public function serializeForOngoingBranch(array &$result): void
+    {
+        $result[] = $this->serializeVersions([$this->version], false);
+        $result[] = $this->serializeVersions([$this->version], true);
     }
 
     private function serializeVersions(array $versions, bool $full): array
@@ -186,7 +218,7 @@ readonly class Version
                 $versions
             );
         }
-        return [
+        $result = [
             'php_version' => $this->phpVersion,
             'composer_version' => $this->composerVersion,
             'phpunit_version' => $this->phpunitVersion,
@@ -196,11 +228,16 @@ readonly class Version
             'image_tag' => array_shift($versions),
             'additional_tags' => implode(' ', $versions),
         ];
+        if ($this->isDevVersion) {
+            $result['repo_branch'] = $this->version;
+        }
+
+        return $result;
     }
 }
 
 try {
-    main((string) ($argv[1] ?? ''));
+    main((string) ($argv[1] ?? ''), (string) ($argv[2] ?? ''));
     exit(0);
 } catch (Throwable $x) {
     fwrite(STDERR, $x->getMessage() . "\n");
