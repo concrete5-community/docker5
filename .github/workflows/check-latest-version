@@ -36,10 +36,10 @@ function main(): void
     $localVersions += $newOnlineVersions;
     uksort($localVersions, static function (string $a, string $b): int {
         if (str_ends_with($a, DEV_VERSIONS_SUFFIX)) {
-            $a = substr($a, -strlen(DEV_VERSIONS_SUFFIX)) . '.999';
+            $a = substr($a, 0, -strlen(DEV_VERSIONS_SUFFIX)) . '.999';
         }
         if (str_ends_with($b, DEV_VERSIONS_SUFFIX)) {
-            $b = substr($b, -strlen(DEV_VERSIONS_SUFFIX)) . '.999';
+            $b = substr($b, 0, -strlen(DEV_VERSIONS_SUFFIX)) . '.999';
         }
         return version_compare($a, $b);
     });
