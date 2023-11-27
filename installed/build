@@ -67,6 +67,8 @@ c5 c5:install \
     --admin-email=admin@example.org \
     --admin-password=12345 \
 
+sudo -u www-data -- mkdir --mode=0755 -p /app/application/languages/site
+
 c5 c5:config set -g concrete.seo.url_rewriting true
 
 printTitle 'Final operations'
