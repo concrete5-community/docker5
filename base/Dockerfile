@@ -22,6 +22,7 @@ ADD https://raw.githubusercontent.com/concrete5-community/cli/master/composerpkg
 
 EXPOSE 80
 EXPOSE 3306
+EXPOSE 8025
 EXPOSE 9000
 
 RUN /build && rm /build

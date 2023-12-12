@@ -2,12 +2,14 @@
 set -o nounset
 set -o errexit
 
+CCM_MAILHOG_BIN=/usr/local/bin/mailhog
+
 script_name=$0
 php_major_minor=
 php_major_minor_int=
 
 exitWithSyntax() {
-    printf 'Syntax: %s <start|restart|stop|status> [db] [web] [nginx] [php-fpm|php|fpm]\n\nStart/restart/stop the database and the webserver services, or check if they are running.\nIf you specify "status", the returned code will be 0 if the services are running, 1 otherwise.\n' "$script_name" >&2
+    printf 'Syntax: %s <start|restart|stop|status> [db] [web] [nginx] [php-fpm|php|fpm] [mail] \n\nStart/restart/stop the database, the webserver, or the mail services, or check if they are running.\nIf you specify "status", the returned code will be 0 if the services are running, 1 otherwise.\n' "$script_name" >&2
     exit 1
 }
 
@@ -37,11 +39,19 @@ isPhpFpmRunning() {
     service php$(getPhpMajorMinor)-fpm status >/dev/null 2>&1 && return 0 || return 1
 }
 
+getMailPID() {
+    ps h -C mailhog -o pid || true
+}
+isMailRunning() {
+    test -n "$(getMailPID)"
+}
+
 operation=
 do_all=1
 do_mariadb=0
 do_nginx=0
 do_phpfpm=0
+do_mail=0
 while :; do
     if test $# -lt 1; then
         break
@@ -70,6 +80,10 @@ while :; do
             do_all=0
             do_phpfpm=1
             ;;
+        mail)
+            do_all=0
+            do_mail=1
+            ;;
         *)
             exitWithSyntax
             ;;
@@ -82,6 +96,7 @@ fi
 do_mariadb=$((do_mariadb + do_all))
 do_nginx=$((do_nginx + do_all))
 do_phpfpm=$((do_phpfpm + do_all))
+do_mail=$((do_mail + do_all))
 rc=0
 
 if test $operation = 'status'; then
@@ -106,6 +121,15 @@ if test $operation = 'status'; then
     if test $do_phpfpm -ne 0; then
         printf 'PHP-FPM running: '
         if isPhpFpmRunning; then
+            printf 'yes.\n'
+        else
+            printf 'no.\n'
+            rc=1
+        fi
+    fi
+    if test $do_mail -ne 0; then
+        printf 'Mail server running: '
+        if isMailRunning; then
             printf 'yes.\n'
         else
             printf 'no.\n'
@@ -210,6 +234,40 @@ if test $do_phpfpm -ne 0; then
                 fi
             else
                 printf '\nFAILED!.\n' >&2
+                rc=1
+            fi
+        fi
+    fi
+fi
+
+if test $do_mail -ne 0; then
+    if test "$operation" != 'start'; then
+        printf 'Stopping mail server... '
+        if isMailRunning; then
+            kill $(getMailPID)
+            printf 'done.\n'
+        else
+            printf 'not running.\n'
+        fi
+    fi
+    if test "$operation" != 'stop'; then
+        if ! [ -f $CCM_MAILHOG_BIN ]; then
+            printf 'Downloading mailhog... '
+            curl -sSLf -o $CCM_MAILHOG_BIN https://github.com/mailhog/MailHog/releases/latest/download/MailHog_linux_amd64
+            chmod +x $CCM_MAILHOG_BIN
+            printf 'done.\n'
+        fi
+        printf 'Starting mail server... '
+        if isMailRunning; then
+            printf 'already running.\n'
+        else
+            foo="$($CCM_MAILHOG_BIN --storage memory -smtp-bind-addr 0.0.0.0:25 -ui-bind-addr 0.0.0.0:8025 -api-bind-addr 0.0.0.0:8025 >/var/log/mailhog.log 2>&1 &)"
+            sleep 1
+            if isMailRunning; then
+                printf 'done.\n'
+            else
+                printf 'failed!\n'
+                cat /var/log/mailhog.log || true
                 rc=1
             fi
         fi

@@ -30,6 +30,6 @@ Concrete has been installed with this options:
 - Database user password: 12345
 - Exposed port for the website: 80
 - Exposed port for the database: 3306
-
+- Exposed port for the webmail: 8025
 
 EOT
