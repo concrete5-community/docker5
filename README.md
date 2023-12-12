@@ -5,11 +5,13 @@ Docker images that provide pre-installed ConcreteCMS instances without the hassl
 Example: if you want to test your ConcreteCMS package with ConcreteCMS 8.5.4, you can simply run this command:
 
 ```bash
-docker run --rm -it -p 8080:80 -p 33306:3306 -v /path/to/your/package:/app/packages/package_handle ghcr.io/concrete5-community/docker5:8.5.4-full
+docker run --rm -it -p 8080:80 -p 33306:3306 -p 8025:8025 -v /path/to/your/package:/app/packages/package_handle ghcr.io/concrete5-community/docker5:8.5.4-full
 ```
 
 Where:
 - `8080` is the port where you'll browse the ConcreteCMS website (available at `http://localhost:8080`)
+- `33306` is the port where you'll find MySQL
+- `8025` is the port where you'll browse the mails sent by the ConcreteCMS website (available at `http://localhost:8025`)
 - `/path/to/your/package` is the absolute path of the ConcreteCMS package you are going to test (on Windows use `\` instead of `/`)
 - `package_handle` is the handle of the package
 
@@ -45,6 +47,7 @@ Source repository: https://github.com/concrete5-community/docker5
 - Database user password: `12345`
 - Exposed port for the website: `80`
 - Exposed port for the database: `3306`
+- Exposed port for the webmail: `8025`
 
 ## Additional CLI commands
 

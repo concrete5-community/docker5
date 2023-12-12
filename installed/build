@@ -70,6 +70,9 @@ c5 c5:install \
 sudo -u www-data -- mkdir --mode=0755 -p /app/application/languages/site
 
 c5 c5:config set -g concrete.seo.url_rewriting true
+c5 c5:config set -g concrete.mail.method smtp
+c5 c5:config set -g concrete.mail.methods.smtp.server 127.0.0.1
+c5 c5:config set -g concrete.mail.methods.smtp.port 25
 
 printTitle 'Final operations'
 c5 c5:clear-cache

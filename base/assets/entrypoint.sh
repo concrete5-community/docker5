@@ -18,7 +18,7 @@ if test -n "${CCM_PHPUNIT_VERSION:-}"; then
     fi
 fi
 
-if ! ccm-service start; then
+if ! ccm-service start db web; then
     echo 'Failed to start services' >&2
     ccm-service stop >/dev/null 2>&1
     exit 1
