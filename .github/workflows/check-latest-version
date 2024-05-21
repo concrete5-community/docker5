@@ -75,9 +75,35 @@ function readDataFile(string $jsonFilePath): array
 
 function fetchDoc(string $downloadsUrl): DOMDocument
 {
-    $html = file_get_contents($downloadsUrl);
+    $context = stream_context_create([
+        'https' => [
+            'follow_location' => false,
+            'max_redirects' => 0,
+            'ignore_errors' => true,
+        ],
+    ]);
+    $whyNot = '';
+    $http_response_header = [];
+    set_error_handler(
+        static function ($errno, $errstr) use (&$whyNot) {
+            if ($whyNot === '' && is_string($errstr)) {
+                $whyNot = trim($errstr);
+            }
+        },
+        -1
+    );
+    try {
+        $html = file_get_contents($downloadsUrl, false, $context);
+    } finally {
+        restore_error_handler();
+    }
     if ($html === false) {
-        throw new RuntimeException("Failed to fetch from '{$downloadsUrl}'");
+        throw new RuntimeException("Error downloading from {$downloadsUrl}: " . ($whyNot ?: 'unknown error'));
+    }
+    $chunks = empty($http_response_header) ? [] : explode(' ', $http_response_header[0], 3);
+    $statusCode = isset($chunks[1]) && is_numeric($chunks[1]) ? (int) $chunks[1] : null;
+    if ($statusCode !== 200) {
+        throw new RuntimeException("Error downloading from {$downloadsUrl}: unexpected status code ({$statusCode})" . (empty($http_response_header) ? '' : ("\nResponse headers:\n" . trim(implode("\n", $http_response_header)))));
     }
     $doc = new DOMDocument();
     set_error_handler(static function() {}, -1);
@@ -104,7 +130,7 @@ function extractOnlineVersions(DOMDocument $doc, string $downloadsUrl): array
         $result[$versionData[0]] = $versionData[1];
     }
     if ($result === []) {
-        throw new RuntimeException('No versions found.');
+        throw new RuntimeException("No versions found at {$downloadsUrl}");
     }
     return $result;
 }
