@@ -6,6 +6,7 @@ on:
   repository_dispatch:
     types:
       - check-last-version
+  workflow_dispatch: 
 
 jobs:
 
