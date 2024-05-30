@@ -4,8 +4,8 @@
 declare(strict_types=1);
 
 const DOWNLOADS_URLS = [
-    'https://www.concretecms.org/download/archive',
-    'https://documentation.concretecms.org/9-x/developers/security/ancient-release-archive',
+    'https://www.concretecms.org/download/archive' => 1,
+    'https://documentation.concretecms.org/9-x/developers/security/ancient-release-archive' => 2,
 ];
 
 const DEV_VERSIONS_SUFFIX = '.x';
@@ -19,9 +19,9 @@ function main(): void
     $dataFile = __DIR__ . '/../../data/versions.json';
     $localVersions = readDataFile($dataFile);
     $onlineVersions = [];
-    foreach (DOWNLOADS_URLS as $downloadsUrl) {
+    foreach (DOWNLOADS_URLS as $downloadsUrl => $linkFormat) {
         $doc = fetchDoc($downloadsUrl);
-        $onlineVersions += extractOnlineVersions($doc, $downloadsUrl);
+        $onlineVersions += extractOnlineVersions($doc, $downloadsUrl, $linkFormat);
     }
     uksort(
         $onlineVersions,
@@ -118,12 +118,12 @@ function fetchDoc(string $downloadsUrl): DOMDocument
     return $doc;
 }
 
-function extractOnlineVersions(DOMDocument $doc, string $downloadsUrl): array
+function extractOnlineVersions(DOMDocument $doc, string $downloadsUrl, int $linkFormat): array
 {
     $result = [];
     $xpath = new DOMXpath($doc);
     foreach ($xpath->query('/html/body//a') as $link) {
-        $versionData = extractOnlineVersion($link, $downloadsUrl);
+        $versionData = extractOnlineVersion($link, $downloadsUrl, $linkFormat);
         if ($versionData === null) {
             continue;
         }
@@ -142,39 +142,36 @@ function extractMajorVersion(string $version): string
     return $chunks[0] === '5' ? "{$chunks[0]}.{$chunks[1]}" : $chunks[0];
 }
 
-function extractOnlineVersion(DOMElement $link, string $downloadsUrl): ?array
+function extractOnlineVersion(DOMElement $link, string $downloadsUrl, int $linkFormat): ?array
 {
-    $linkContent = trim(preg_replace('/\s+/u', ' ', $link->textContent));
-    if (strcasecmp($linkContent, 'Download') !== 0) {
+    $linkUrl = (string) $link->getAttribute('href');
+    if ($linkUrl === '' || $linkUrl[0] === '#') {
         return null;
     }
-    $url = (string) $link->getAttribute('href');
-    if ($url === '' || $url[0] === '#') {
-        return null;
-    }
-    if (strpos($url, '//') === 0) {
-        $url = parse_url($downloadsUrl, PHP_URL_SCHEME) . ':' . $url;
-    } elseif ($url[0] === '/') {
-        $pageUrl = parse_url($downloadsUrl);
-        $prefix = "{$pageUrl['scheme']}://{$pageUrl['host']}";
-        if (!empty($prefix['port'])) {
-            $prefix .= ":{$prefix['port']}";
-        }
-        $url = $prefix . $url;
-    }
-    if (strpos($downloadsUrl, $url) === 0 && strlen($url) < strlen($downloadsUrl)) {
-        return null;
-    }
-    $parentContent = trim(preg_replace('/\s+/u', ' ', $link->parentNode->textContent));
+    $linkUrl = absolutizeUrl($downloadsUrl, $linkUrl);
+    $linkTextContent = trim(preg_replace('/\s+/u', ' ', (string) $link->textContent));
     $matches = null;
-    if (preg_match('/^(?<version>(5\.)?\d+\.\d+\.\d+) \(\d{1,2}-\d{1,2}-\d{4}\)( .)? Download$/i', $parentContent, $matches)) {
-        return [$matches['version'], $url];
+    switch ($linkFormat) {
+        case 1:
+            if ($linkTextContent !== 'Download' || $link->parentNode === null || $link->parentNode->parentNode === null) {
+                return null;
+            }
+            $parentTextContent = trim(preg_replace('/\s+/u', ' ', (string) $link->parentNode->parentNode->textContent));
+            if (!preg_match('/^(?<version>(5\.)?\d+\.\d+\.\d+) /', $parentTextContent, $matches)) {
+                return null;
+            }
+            return [$matches['version'], $linkUrl];
+        case 2:
+            if (!preg_match('/^(?<version>(5\.)?\d+\.\d+\.\d+)()$/', $linkTextContent, $matches)) {
+                return null;
+            }
+            $parentTextContent = trim(preg_replace('/\s+/u', ' ', (string) $link->parentNode->textContent));
+            if (strpos($parentTextContent, "{$matches['version']} ") !== 0) {
+                return null;
+            }
+            return [$matches['version'], $linkUrl];
     }
-    $grandParentContent = trim(preg_replace('/\s+/u', ' ', $link->parentNode->parentNode->textContent));
-    if (preg_match('/^(?<version>(5\.)?\d+\.\d+\.\d+) /i', $grandParentContent, $matches)) {
-        return [$matches['version'], $url];
-    }
-    return null;
+    throw new RuntimeException("Unrecognized link format: {$linkFormat}");
 }
 
 function filterOnlineVersions(array $onlineVersions, array $localVersions): array
@@ -224,6 +221,55 @@ function shouldKeepOnlineVersion(string $version, array $localMajorVersions): bo
         return false;
     }
     return !isset($localMajorVersions[$major]) || version_compare($version, $localMajorVersions[$major]) > 0;
+}
+
+function absolutizeUrl(string $parentUrl, string $url): string
+{
+    if ($url === '') {
+        return '';
+    }
+    if (preg_match('_^\w+://_', $url)) {
+        return $url;
+    }
+    $urlChunks = parse_url($url);
+    $parentUrlChunks = parse_url($parentUrl);
+    if ($parentUrlChunks === false || empty($parentUrlChunks['scheme']) || empty($parentUrlChunks['host'])) {
+        throw new RuntimeException("{$parentUrl} is not an absolute URL");
+    }
+    if (substr($url, 0, 2) === '//') {
+        return "{$parentUrlChunks['scheme']}:{$url}";
+    }
+    $result = "{$parentUrlChunks['scheme']}://{$parentUrlChunks['host']}";
+    if (!empty($parentUrlChunks['port'])) {
+        $result .= ":{$parentUrlChunks['port']}";
+    }
+    if ($url[0] === '/') {
+        return $result . $url;
+    }
+    if ($url[0] === '#') {
+        $p = strpos($parentUrl, '#');
+        if ($p === false) {
+            return $parentUrl . $url;
+        }
+        return substr($parentUrl, 0, $p) . $url;
+    }
+    if ($url[0] === '?') {
+        $p1 = strpos($parentUrl, '#');
+        $p2 = strpos($parentUrl, '?');
+        if ($p1 === false && $p2 === false) {
+            return $parentUrl . $url;
+        }
+        $p = min($p1 === false ? PHP_INT_MAX : $p1, $p2 === false ? PHP_INT_MAX : $p2);
+        return substr($parentUrl, 0, $p) . $url;
+    }
+    $path = ($parentUrlChunks['path'] ?? '') ?: '/';
+    if (substr($path, 0, -1) !== '/') {
+        $path = dirname($path);
+        if ($path === '') {
+            $path = '/';
+        }
+    }
+    return $result . $path . $url;
 }
 
 try {
