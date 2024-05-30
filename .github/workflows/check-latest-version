@@ -20,13 +20,17 @@ function main(): void
     $localVersions = readDataFile($dataFile);
     $onlineVersions = [];
     foreach (DOWNLOADS_URLS as $downloadsUrl => $linkFormat) {
-        $doc = fetchDoc($downloadsUrl);
-        $onlineVersions += extractOnlineVersions($doc, $downloadsUrl, $linkFormat);
+        $onlineVersions += extractOnlineVersions($downloadsUrl, $linkFormat);
     }
     uksort(
         $onlineVersions,
         static fn (string $a, string $b): int => version_compare($b, $a)
     );
+    foreach ($onlineVersions as $version => $url) {
+        if (isset($localVersions[$version])) {
+            $localVersions[$version] = $url;
+        }
+    }
     $newOnlineVersions = filterOnlineVersions($onlineVersions, array_keys($localVersions));
     if ($newOnlineVersions === []) {
         echo 'No new online versions found';
@@ -118,8 +122,9 @@ function fetchDoc(string $downloadsUrl): DOMDocument
     return $doc;
 }
 
-function extractOnlineVersions(DOMDocument $doc, string $downloadsUrl, int $linkFormat): array
+function extractOnlineVersions(string $downloadsUrl, int $linkFormat): array
 {
+    $doc = fetchDoc($downloadsUrl);
     $result = [];
     $xpath = new DOMXpath($doc);
     foreach ($xpath->query('/html/body//a') as $link) {
