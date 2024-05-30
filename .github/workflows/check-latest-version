@@ -5,7 +5,7 @@ declare(strict_types=1);
 
 const DOWNLOADS_URLS = [
     'https://www.concretecms.org/download/archive',
-    'https://marketplace.concretecms.com/developer-downloads/',
+    'https://documentation.concretecms.org/9-x/developers/security/ancient-release-archive',
 ];
 
 const DEV_VERSIONS_SUFFIX = '.x';
