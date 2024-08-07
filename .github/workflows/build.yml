@@ -94,14 +94,14 @@ jobs:
       -
         name: Upload artifact
         if: needs.check_envoronment.outputs.action == 'build'
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: base-image
           path: /tmp/base-image.tgz
       -
         name: Login to the Docker container registry
         if: needs.check_envoronment.outputs.action == 'publish'
-        uses: docker/login-action@v2
+        uses: docker/login-action@v3
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
@@ -151,7 +151,7 @@ jobs:
       -
         name: Download base image
         if: needs.check_envoronment.outputs.action == 'build'
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: base-image
           path: /tmp/
@@ -184,7 +184,7 @@ jobs:
       -
         name: Login to the Docker container registry
         if: needs.check_envoronment.outputs.action == 'publish'
-        uses: docker/login-action@v2
+        uses: docker/login-action@v3
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
