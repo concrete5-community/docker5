@@ -14,6 +14,7 @@ enum Workflow: string
 {
     case Build = 'build.yml';
     case OngoingBranch = 'ongoing-branch.yml';
+    case UpdateReadme = 'update-readme.yml';
 }
 
 function main(string $workflowID, string $outputFile): void
@@ -25,8 +26,12 @@ function main(string $workflowID, string $outputFile): void
     $versions = readDataFile(__DIR__ . '/../../data/versions.json');
     $serialized = $versions->serialize($workflow);
     $json = json_encode($serialized, JSON_PRETTY_PRINT | JSON_UNESCAPED_LINE_TERMINATORS | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR);
-    echo "Genetated matrix:\n{$json}\n";
-    file_put_contents($outputFile, "generated-matrix<<EOF\n{$json}\nEOF\n", FILE_APPEND);
+    if ($workflow === Workflow::UpdateReadme) {
+        file_put_contents($outputFile, $json);
+    } else {
+        echo "Genetated matrix:\n{$json}\n";
+        file_put_contents($outputFile, "generated-matrix<<EOF\n{$json}\nEOF\n", FILE_APPEND);
+    }    
 }
 
 function readDataFile(string $jsonFilePath): Versions
@@ -86,7 +91,7 @@ class Versions
         $result = [];
         $alreadySerializedVersions = [];
         foreach ($this->list as $version) {
-            if ($workflow === Workflow::Build || $version->isDevVersion) {
+            if ($workflow !== Workflow::OngoingBranch || $version->isDevVersion) {
                 $version->serialize($result, $alreadySerializedVersions);
             }
         }

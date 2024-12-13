@@ -1,0 +1,113 @@
+name: Update README
+
+on:
+  pull_request:
+    paths:
+      - .github/workflows/generate-matrix
+      - .github/workflows/update-readme.yml
+      - .github/workflows/generate-matrix
+      - data/versions.json
+  push:
+    branches:
+      - main
+    tags-ignore:
+      - "**"
+    paths:
+      - .github/workflows/generate-matrix
+      - .github/workflows/update-readme.yml
+      - .github/workflows/update-readme
+      - data/versions.json
+  workflow_dispatch:
+    inputs:
+      publish:
+        description: Publish
+        type: boolean
+        required: false
+
+jobs:
+
+  check_envoronment:
+    name: Check environment
+    runs-on: ubuntu-latest
+    outputs:
+      action: ${{ steps.inspect.outputs.action }}
+    steps:
+      -
+        name: Inspect environment
+        id: inspect
+        run: |
+          action=
+          case ${{ github.event_name }} in
+            push)
+              case "${{ github.event.head_commit.message }}" in
+                \[skip\ ci\]*)
+                  ;;
+                *)
+                  action=publish
+                  ;;
+              esac
+              ;;
+            pull_request)
+              action=build
+              ;;
+            workflow_dispatch)
+              action="${{ inputs.action}}"
+              ;;
+            workflow_dispatch)
+              case '${{ inputs.publish }}' in
+                t* | y* | 1)
+                  action=publish
+                  ;;
+                *)
+                  action=build
+                  ;;
+              esac
+              ;;
+          esac
+          echo "action=$action" >> $GITHUB_OUTPUT
+      -
+        name: Print environment info
+        run: |
+          printf 'github.event_name: %s\n' "${{ github.event_name }}"
+          printf 'github.ref: %s\n' "${{ github.ref }}"
+          printf 'Action to be performed: %s\n' "${{ steps.inspect.outputs.action }}"
+
+  update-readme:
+    name: Update README
+    needs:
+      - check_envoronment
+    runs-on: ubuntu-latest
+    if: needs.check_envoronment.outputs.action != 'none'
+    steps:
+      -
+        name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          extensions: none
+          tools: none
+          coverage: none
+      -
+        name: Checkout
+        uses: actions/checkout@v4
+      -
+        name: Update README
+        run: ./.github/workflows/update-readme README.md
+      -
+        name: Check changes
+        id: check-changes
+        run: |
+          if git diff --color=always --exit-code README.md; then
+            echo 'No changes'
+          else
+            echo 'commit=yes' >>"$GITHUB_OUTPUT"
+          fi
+      -
+        name: Commit
+        if: needs.check_envoronment.outputs.action == 'publish' && steps.check-changes.commit == 'yes'
+        run: |
+          git add README.md
+          git config user.name GitHub
+          git config user.email noreply@github.com
+          git commit -m 'Update po from Transifex'
+          git push

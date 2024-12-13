@@ -1,0 +1,169 @@
+#!/usr/bin/env php
+<?php
+
+declare(strict_types=1);
+
+set_error_handler(static function ($errno, $errstr, $errfile, $errline) {
+    throw new RuntimeException("Error {$errno}: {$errstr}\nFile: {$errfile}\nLine: {$errline}");
+}, -1);
+
+function main(string $readmeFile): void
+{
+    if ($readmeFile === '') {
+        throw new RuntimeException('Missing path of the README file');
+    }
+    if (!is_file($readmeFile)) {
+        throw new RuntimeException("Unable to find the README file '{$readmeFile}'");
+    }
+    $versions = buildVersions();
+    $stableVersionsMD = generateTable($versions, VersionType::Stable);
+    $developmentVersionsMD = generateTable($versions, VersionType::Development);
+    $readmeMD = file_get_contents($readmeFile);
+    $readmeMD = replaceMD($readmeMD, [
+        'STABLE VERSIONS TABLE' => "\n{$stableVersionsMD}\n",
+        'DEVELOPMENT VERSIONS TABLE' => "\n{$developmentVersionsMD}\n",
+    ]);
+    file_put_contents($readmeFile, $readmeMD);
+    echo "{$readmeFile} updated.\n";
+}
+
+enum VersionType
+{
+    case Stable;
+    case Development;
+}
+readonly class Version
+{
+    public function __construct(
+        public VersionType $type,
+        public string $tag,
+        public array $additionalTags,
+        public string $phpVersion,
+        public string $composerVersion,
+        public string $startingPoint,
+        public string $repoBranch,
+    )
+    {
+    }
+}
+
+function buildVersions(): array
+{
+    $tempFile = tempnam(sys_get_temp_dir(), 'CD5');
+    try {
+        $rc = null;
+        passthru(implode(' ', [
+            escapeshellarg(PHP_BINARY),
+            escapeshellarg(__DIR__ . '/generate-matrix'),
+            'update-readme.yml',
+            escapeshellarg($tempFile),
+        ]), $rc);
+        if ($rc !== 0) {
+            throw new RuntimeException('generate-matrix failed');
+        }
+        $json = file_get_contents($tempFile);
+    } finally {
+        unlink($tempFile);
+    }
+    $data = json_decode($json, true, flags: JSON_THROW_ON_ERROR);
+    $versions = [];
+    foreach ($data as $item) {
+        $versions[] = new Version(
+            type: strpos($item['image_tag'], '.x') !== false ? VersionType::Development : VersionType::Stable,
+            tag: $item['image_tag'],
+            additionalTags: preg_split('/\s+/', $item['additional_tags'] ?? '', flags: PREG_SPLIT_NO_EMPTY),
+            phpVersion: $item['php_version'],
+            composerVersion: $item['composer_version'],
+            startingPoint: $item['c5_startingpoint'],
+            repoBranch: $item['repo_branch'] ?? '',
+        );
+   }
+    return $versions;
+}
+
+function generateTable(array $versions, VersionType $type): string
+{
+    switch ($type) {
+        case VersionType::Stable:
+            $headers = ['Version' => ':---:', 'Aliases' => ':---:', 'Starting Point' => '---', 'Default PHP Version' => ':---:', 'Images' => '---'];
+            $headersCenter = [true, true, true, false];
+            break;
+        case VersionType::Development:
+            $headers = ['Branch' => ':---:', 'Starting Point' => '---', 'Default PHP Version' => ':---:', 'Image' => '---'];
+            $headersCenter = [true, true, false];
+            break;
+    }
+    $lines = [];
+    $lines[] = '| ' . implode(' | ', array_keys($headers)) . ' |';
+    $lines[] = '|' . implode('|', array_values($headers)) . '|';
+    foreach ($versions as $version) {
+        /** @var Version $version */
+        if ($version->type !== $type) {
+            continue;
+        }
+        switch ($type) {
+            case VersionType::Stable:
+                $fields = [
+                    $version->tag,
+                    implode('<br />', $version->additionalTags),
+                    $version->startingPoint,
+                    $version->phpVersion,
+                    '`' . implode('`<br />`', array_map(
+                        static fn(string $tag): string => "ghcr.io/concrete5-community/docker5:{$tag}",
+                        [$version->tag, ...$version->additionalTags]
+                    )) . '`',
+                ];
+                break;
+            case VersionType::Development:
+                $fields = [
+                    "[{$version->repoBranch}](https://github.com/concretecms/concretecms/tree/{$version->repoBranch})",
+                    $version->startingPoint,
+                    $version->phpVersion,
+                    "`ghcr.io/concrete5-community/docker5:{$version->tag}`",
+                ];
+                break;
+        }
+        $lines[] = '| ' . implode(' | ', $fields) . ' |';
+    }
+    $result = implode("\n", $lines);
+
+    return $result;
+}
+
+function replaceMD(string $md, array $replacements): string
+{
+    foreach ($replacements as $key => $value) {
+        $start = "<!-- START OF {$key} -->";
+        $end = "<!-- END OF {$key} -->";
+        $replaced = '';
+        $found = false;
+        while (($p = strpos($md, $start)) !== false) {
+            $found = true;
+            $p += strlen($start);
+            $replaced .= substr($md, 0, $p) . $value;
+            $p = strpos($md, $end, $p);
+            if ($p === false) {
+                throw new RuntimeException("Failed to find the closing '{$end}'");
+            }
+            $md = substr($md, $p);
+        }
+        if ($found === false) {
+            throw new RuntimeException("Failed to find the opening '{$start}' in $md");
+        }
+        $md = $replaced . $md;
+    }
+
+    return $md;
+}
+
+try {
+    main((string) ($argv[1] ?? ''), (string) ($argv[2] ?? ''));
+    exit(0);
+} catch (Throwable $x) {
+    if ($x instanceof RuntimeException) {
+        fwrite(STDERR, $x->getMessage() . "\n");
+    } else {
+        fwrite(STDERR, trim((string) $x) . "\n");
+    }
+    exit(1);
+}
