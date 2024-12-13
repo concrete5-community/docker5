@@ -23,6 +23,12 @@ on:
     types:
       - build
       - publish
+  workflow_dispatch:
+    inputs:
+      publish:
+        description: Publish
+        type: boolean
+        required: false
 
 jobs:
 
@@ -37,7 +43,6 @@ jobs:
         id: inspect
         run: |
           action=none
-          echo 'action=none' >> $GITHUB_OUTPUT
           case ${{ github.event_name }} in
             repository_dispatch)
               case "${{ github.event.event_type }}" in
@@ -64,6 +69,16 @@ jobs:
               ;;
             pull_request)
               action=build
+              ;;
+            workflow_dispatch)
+              case '${{ inputs.publish }}' in
+                t* | y* | 1)
+                  action=publish
+                  ;;
+                *)
+                  action=build
+                  ;;
+              esac
               ;;
           esac
           echo "action=$action" >> $GITHUB_OUTPUT
