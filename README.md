@@ -101,8 +101,8 @@ Here's the list of the available docker images:
 | 8.5.4-full |  | elemental_full | 7.4 | `ghcr.io/concrete5-community/docker5:8.5.4-full` |
 | 8.5.2 |  | elemental_blank | 7.4 | `ghcr.io/concrete5-community/docker5:8.5.2` |
 | 8.5.2-full |  | elemental_full | 7.4 | `ghcr.io/concrete5-community/docker5:8.5.2-full` |
-| 5.7.5.13 | 5.7.5<br />5 | elemental_blank | 5.6 | `ghcr.io/concrete5-community/docker5:5.7.5.13`<br />`ghcr.io/concrete5-community/docker5:5.7.5`<br />`ghcr.io/concrete5-community/docker5:5` |
-| 5.7.5.13-full | 5.7.5-full<br />5-full | elemental_full | 5.6 | `ghcr.io/concrete5-community/docker5:5.7.5.13-full`<br />`ghcr.io/concrete5-community/docker5:5.7.5-full`<br />`ghcr.io/concrete5-community/docker5:5-full` |
+| 5.7.5.13 | 5.7.5<br />5.7 | elemental_blank | 5.6 | `ghcr.io/concrete5-community/docker5:5.7.5.13`<br />`ghcr.io/concrete5-community/docker5:5.7.5`<br />`ghcr.io/concrete5-community/docker5:5.7` |
+| 5.7.5.13-full | 5.7.5-full<br />5.7-full | elemental_full | 5.6 | `ghcr.io/concrete5-community/docker5:5.7.5.13-full`<br />`ghcr.io/concrete5-community/docker5:5.7.5-full`<br />`ghcr.io/concrete5-community/docker5:5.7-full` |
 <!-- END OF STABLE VERSIONS TABLE -->
 
 You can also try the latest development versions, built directly from the official git repository.
