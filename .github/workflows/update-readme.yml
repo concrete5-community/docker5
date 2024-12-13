@@ -97,7 +97,7 @@ jobs:
         name: Check changes
         id: check-changes
         run: |
-          if git diff --exit-code README.md; then
+          if git diff --color=always --exit-code README.md; then
             echo 'No changes'
           else
             echo 'commit=yes' >>"$GITHUB_OUTPUT"

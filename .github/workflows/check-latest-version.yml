@@ -33,7 +33,7 @@ jobs:
         name: Check changes
         id: check
         run: |
-          if git diff --exit-code ./data/versions.json; then
+          if git diff --color=always --exit-code ./data/versions.json; then
             echo 'No changes detected'
             echo "changed=no" >>"$GITHUB_OUTPUT"
           else
