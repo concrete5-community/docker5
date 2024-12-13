@@ -25,18 +25,15 @@ on:
         required: false
 
 jobs:
-
-  check_envoronment:
-    name: Check environment
+  update-readme:
+    name: Update README
     runs-on: ubuntu-latest
-    outputs:
-      action: ${{ steps.inspect.outputs.action }}
     steps:
       -
         name: Inspect environment
-        id: inspect
+        id: inspect-environment
         run: |
-          action=
+          action=none
           case ${{ github.event_name }} in
             push)
               case "${{ github.event.head_commit.message }}" in
@@ -70,17 +67,10 @@ jobs:
         run: |
           printf 'github.event_name: %s\n' "${{ github.event_name }}"
           printf 'github.ref: %s\n' "${{ github.ref }}"
-          printf 'Action to be performed: %s\n' "${{ steps.inspect.outputs.action }}"
-
-  update-readme:
-    name: Update README
-    needs:
-      - check_envoronment
-    runs-on: ubuntu-latest
-    if: needs.check_envoronment.outputs.action != 'none'
-    steps:
+          printf 'Action to be performed: %s\n' "${{ steps.inspect-environment.outputs.action }}"
       -
         name: Setup PHP
+        if: steps.inspect-environment.outputs.action != 'none'
         uses: shivammathur/setup-php@v2
         with:
           php-version: '8.2'
@@ -89,12 +79,15 @@ jobs:
           coverage: none
       -
         name: Checkout
+        if: steps.inspect-environment.outputs.action != 'none'
         uses: actions/checkout@v4
       -
         name: Update README
+        if: steps.inspect-environment.outputs.action != 'none'
         run: ./.github/workflows/update-readme README.md
       -
         name: Check changes
+        if: steps.inspect-environment.outputs.action != 'none'
         id: check-changes
         run: |
           if git diff --color=always --exit-code README.md; then
@@ -104,7 +97,7 @@ jobs:
           fi
       -
         name: Commit
-        if: needs.check_envoronment.outputs.action == 'publish' && steps.check-changes.commit == 'yes'
+        if: steps.inspect-environment.outputs.action == 'publish' && steps.check-changes.outputs.commit == 'yes'
         run: |
           git add README.md
           git config user.name GitHub
