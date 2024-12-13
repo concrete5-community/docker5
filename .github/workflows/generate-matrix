@@ -105,7 +105,7 @@ readonly class Version
 
     public string $comparableVersion;
 
-    public int $majorVersion;
+    public string $majorVersion;
 
     public string $majorMinorVersion;
 
@@ -139,20 +139,20 @@ readonly class Version
             $this->isDevVersion = false;
             $this->comparableVersion = $this->version;
         }
-        $this->majorVersion = (int) $matches['major'];
+        $this->majorVersion = $matches['major'];
         $this->majorMinorVersion = "{$matches['major']}.{$matches['minor']}";
 
         if (version_compare($this->majorMinorVersion, '9.2') >= 0) {
             $this->phpVersion = '8.2';
-        } elseif ($this->majorVersion >= 9) {
+        } elseif (version_compare($this->majorVersion, '9') >= 0) {
             $this->phpVersion = '8.1';
-        } elseif ($this->majorVersion >= 8) {
+        } elseif (version_compare($this->majorVersion, '8') >= 0) {
             $this->phpVersion = '7.4';
         } else {
             $this->phpVersion = '5.6';
         }
 
-        if ($this->majorVersion >= 9) {
+        if (version_compare($this->majorVersion, '9') >= 0) {
             $this->composerVersion = '2';
         } else {
             $this->composerVersion = '1';
@@ -160,7 +160,7 @@ readonly class Version
 
         if (str_ends_with($this->version, DEV_VERSIONS_SUFFIX)) {
             $this->phpunitVersion = 'ccm';
-        } elseif ($this->majorVersion >= 9) {
+        } elseif (version_compare($this->majorVersion, '9') >= 0) {
             $this->phpunitVersion = '8';
         } else {
             $this->phpunitVersion = '4';
@@ -172,13 +172,13 @@ readonly class Version
             $this->blankStartingPoint = 'elemental_blank';
         }
 
-        if ($this->majorVersion >= 9) {
+        if (version_compare($this->majorVersion, '9') >= 0) {
             $this->fullStartingPoint = 'atomik_full';
         } else {
             $this->fullStartingPoint = 'elemental_full';
         }
 
-        if ($this->majorVersion >= 8 && version_compare($this->comparableVersion, '9.2.0') <= 0) {
+        if (version_compare($this->majorVersion, '8') >= 0 && version_compare($this->comparableVersion, '9.2.0') <= 0) {
             $this->patchEnvironmentOnly = true;
         } else {
             $this->patchEnvironmentOnly = false;
@@ -198,7 +198,7 @@ readonly class Version
                 }
             }
         } else {
-            $versions = [$this->version, $this->majorMinorVersion, (string) $this->majorVersion];
+            $versions = [$this->version, $this->majorMinorVersion, $this->majorVersion];
         }
         $newVersions = array_values(array_diff($versions, $alreadySerializedVersions));
         if ($this->isDevVersion === false && !in_array(VERSIONID_LATEST, $alreadySerializedVersions, true)) {
