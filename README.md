@@ -27,6 +27,82 @@ Here's the list of the available docker images:
 <!-- #                                                         # -->
 <!-- ########################################################### -->
 <!-- START OF STABLE VERSIONS TABLE -->
+| Version | Aliases | Starting Point | Default PHP Version | Images |
+|:---:|:---:|---|:---:|---|
+| 9.3.8 | 9.3<br />9<br />latest | atomik_blank | 8.2 | `ghcr.io/concrete5-community/docker5:9.3.8`<br />`ghcr.io/concrete5-community/docker5:9.3`<br />`ghcr.io/concrete5-community/docker5:9`<br />`ghcr.io/concrete5-community/docker5:latest` |
+| 9.3.8-full | 9.3-full<br />9-full<br />latest-full | atomik_full | 8.2 | `ghcr.io/concrete5-community/docker5:9.3.8-full`<br />`ghcr.io/concrete5-community/docker5:9.3-full`<br />`ghcr.io/concrete5-community/docker5:9-full`<br />`ghcr.io/concrete5-community/docker5:latest-full` |
+| 9.3.7 |  | atomik_blank | 8.2 | `ghcr.io/concrete5-community/docker5:9.3.7` |
+| 9.3.7-full |  | atomik_full | 8.2 | `ghcr.io/concrete5-community/docker5:9.3.7-full` |
+| 9.3.6 |  | atomik_blank | 8.2 | `ghcr.io/concrete5-community/docker5:9.3.6` |
+| 9.3.6-full |  | atomik_full | 8.2 | `ghcr.io/concrete5-community/docker5:9.3.6-full` |
+| 9.3.5 |  | atomik_blank | 8.2 | `ghcr.io/concrete5-community/docker5:9.3.5` |
+| 9.3.5-full |  | atomik_full | 8.2 | `ghcr.io/concrete5-community/docker5:9.3.5-full` |
+| 9.3.4 |  | atomik_blank | 8.2 | `ghcr.io/concrete5-community/docker5:9.3.4` |
+| 9.3.4-full |  | atomik_full | 8.2 | `ghcr.io/concrete5-community/docker5:9.3.4-full` |
+| 9.3.3 |  | atomik_blank | 8.2 | `ghcr.io/concrete5-community/docker5:9.3.3` |
+| 9.3.3-full |  | atomik_full | 8.2 | `ghcr.io/concrete5-community/docker5:9.3.3-full` |
+| 9.3.2 |  | atomik_blank | 8.2 | `ghcr.io/concrete5-community/docker5:9.3.2` |
+| 9.3.2-full |  | atomik_full | 8.2 | `ghcr.io/concrete5-community/docker5:9.3.2-full` |
+| 9.2.9 | 9.2 | atomik_blank | 8.2 | `ghcr.io/concrete5-community/docker5:9.2.9`<br />`ghcr.io/concrete5-community/docker5:9.2` |
+| 9.2.9-full | 9.2-full | atomik_full | 8.2 | `ghcr.io/concrete5-community/docker5:9.2.9-full`<br />`ghcr.io/concrete5-community/docker5:9.2-full` |
+| 9.2.8 |  | atomik_blank | 8.2 | `ghcr.io/concrete5-community/docker5:9.2.8` |
+| 9.2.8-full |  | atomik_full | 8.2 | `ghcr.io/concrete5-community/docker5:9.2.8-full` |
+| 9.2.7 |  | atomik_blank | 8.2 | `ghcr.io/concrete5-community/docker5:9.2.7` |
+| 9.2.7-full |  | atomik_full | 8.2 | `ghcr.io/concrete5-community/docker5:9.2.7-full` |
+| 9.2.6 |  | atomik_blank | 8.2 | `ghcr.io/concrete5-community/docker5:9.2.6` |
+| 9.2.6-full |  | atomik_full | 8.2 | `ghcr.io/concrete5-community/docker5:9.2.6-full` |
+| 9.2.5 |  | atomik_blank | 8.2 | `ghcr.io/concrete5-community/docker5:9.2.5` |
+| 9.2.5-full |  | atomik_full | 8.2 | `ghcr.io/concrete5-community/docker5:9.2.5-full` |
+| 9.2.4 |  | atomik_blank | 8.2 | `ghcr.io/concrete5-community/docker5:9.2.4` |
+| 9.2.4-full |  | atomik_full | 8.2 | `ghcr.io/concrete5-community/docker5:9.2.4-full` |
+| 9.2.3 |  | atomik_blank | 8.2 | `ghcr.io/concrete5-community/docker5:9.2.3` |
+| 9.2.3-full |  | atomik_full | 8.2 | `ghcr.io/concrete5-community/docker5:9.2.3-full` |
+| 9.2.2 |  | atomik_blank | 8.2 | `ghcr.io/concrete5-community/docker5:9.2.2` |
+| 9.2.2-full |  | atomik_full | 8.2 | `ghcr.io/concrete5-community/docker5:9.2.2-full` |
+| 9.2.1 |  | atomik_blank | 8.2 | `ghcr.io/concrete5-community/docker5:9.2.1` |
+| 9.2.1-full |  | atomik_full | 8.2 | `ghcr.io/concrete5-community/docker5:9.2.1-full` |
+| 9.2.0 |  | atomik_blank | 8.2 | `ghcr.io/concrete5-community/docker5:9.2.0` |
+| 9.2.0-full |  | atomik_full | 8.2 | `ghcr.io/concrete5-community/docker5:9.2.0-full` |
+| 9.1.3 | 9.1 | elemental_blank | 8.1 | `ghcr.io/concrete5-community/docker5:9.1.3`<br />`ghcr.io/concrete5-community/docker5:9.1` |
+| 9.1.3-full | 9.1-full | atomik_full | 8.1 | `ghcr.io/concrete5-community/docker5:9.1.3-full`<br />`ghcr.io/concrete5-community/docker5:9.1-full` |
+| 9.1.2 |  | elemental_blank | 8.1 | `ghcr.io/concrete5-community/docker5:9.1.2` |
+| 9.1.2-full |  | atomik_full | 8.1 | `ghcr.io/concrete5-community/docker5:9.1.2-full` |
+| 9.1.1 |  | elemental_blank | 8.1 | `ghcr.io/concrete5-community/docker5:9.1.1` |
+| 9.1.1-full |  | atomik_full | 8.1 | `ghcr.io/concrete5-community/docker5:9.1.1-full` |
+| 9.1.0 |  | elemental_blank | 8.1 | `ghcr.io/concrete5-community/docker5:9.1.0` |
+| 9.1.0-full |  | atomik_full | 8.1 | `ghcr.io/concrete5-community/docker5:9.1.0-full` |
+| 9.0.2 | 9.0 | elemental_blank | 8.1 | `ghcr.io/concrete5-community/docker5:9.0.2`<br />`ghcr.io/concrete5-community/docker5:9.0` |
+| 9.0.2-full | 9.0-full | atomik_full | 8.1 | `ghcr.io/concrete5-community/docker5:9.0.2-full`<br />`ghcr.io/concrete5-community/docker5:9.0-full` |
+| 9.0.1 |  | elemental_blank | 8.1 | `ghcr.io/concrete5-community/docker5:9.0.1` |
+| 9.0.1-full |  | atomik_full | 8.1 | `ghcr.io/concrete5-community/docker5:9.0.1-full` |
+| 8.5.19 | 8.5<br />8 | elemental_blank | 7.4 | `ghcr.io/concrete5-community/docker5:8.5.19`<br />`ghcr.io/concrete5-community/docker5:8.5`<br />`ghcr.io/concrete5-community/docker5:8` |
+| 8.5.19-full | 8.5-full<br />8-full | elemental_full | 7.4 | `ghcr.io/concrete5-community/docker5:8.5.19-full`<br />`ghcr.io/concrete5-community/docker5:8.5-full`<br />`ghcr.io/concrete5-community/docker5:8-full` |
+| 8.5.18 |  | elemental_blank | 7.4 | `ghcr.io/concrete5-community/docker5:8.5.18` |
+| 8.5.18-full |  | elemental_full | 7.4 | `ghcr.io/concrete5-community/docker5:8.5.18-full` |
+| 8.5.17 |  | elemental_blank | 7.4 | `ghcr.io/concrete5-community/docker5:8.5.17` |
+| 8.5.17-full |  | elemental_full | 7.4 | `ghcr.io/concrete5-community/docker5:8.5.17-full` |
+| 8.5.16 |  | elemental_blank | 7.4 | `ghcr.io/concrete5-community/docker5:8.5.16` |
+| 8.5.16-full |  | elemental_full | 7.4 | `ghcr.io/concrete5-community/docker5:8.5.16-full` |
+| 8.5.15 |  | elemental_blank | 7.4 | `ghcr.io/concrete5-community/docker5:8.5.15` |
+| 8.5.15-full |  | elemental_full | 7.4 | `ghcr.io/concrete5-community/docker5:8.5.15-full` |
+| 8.5.14 |  | elemental_blank | 7.4 | `ghcr.io/concrete5-community/docker5:8.5.14` |
+| 8.5.14-full |  | elemental_full | 7.4 | `ghcr.io/concrete5-community/docker5:8.5.14-full` |
+| 8.5.13 |  | elemental_blank | 7.4 | `ghcr.io/concrete5-community/docker5:8.5.13` |
+| 8.5.13-full |  | elemental_full | 7.4 | `ghcr.io/concrete5-community/docker5:8.5.13-full` |
+| 8.5.12 |  | elemental_blank | 7.4 | `ghcr.io/concrete5-community/docker5:8.5.12` |
+| 8.5.12-full |  | elemental_full | 7.4 | `ghcr.io/concrete5-community/docker5:8.5.12-full` |
+| 8.5.7 |  | elemental_blank | 7.4 | `ghcr.io/concrete5-community/docker5:8.5.7` |
+| 8.5.7-full |  | elemental_full | 7.4 | `ghcr.io/concrete5-community/docker5:8.5.7-full` |
+| 8.5.6 |  | elemental_blank | 7.4 | `ghcr.io/concrete5-community/docker5:8.5.6` |
+| 8.5.6-full |  | elemental_full | 7.4 | `ghcr.io/concrete5-community/docker5:8.5.6-full` |
+| 8.5.5 |  | elemental_blank | 7.4 | `ghcr.io/concrete5-community/docker5:8.5.5` |
+| 8.5.5-full |  | elemental_full | 7.4 | `ghcr.io/concrete5-community/docker5:8.5.5-full` |
+| 8.5.4 |  | elemental_blank | 7.4 | `ghcr.io/concrete5-community/docker5:8.5.4` |
+| 8.5.4-full |  | elemental_full | 7.4 | `ghcr.io/concrete5-community/docker5:8.5.4-full` |
+| 8.5.2 |  | elemental_blank | 7.4 | `ghcr.io/concrete5-community/docker5:8.5.2` |
+| 8.5.2-full |  | elemental_full | 7.4 | `ghcr.io/concrete5-community/docker5:8.5.2-full` |
+| 5.7.5.13 | 5.7.5<br />5 | elemental_blank | 5.6 | `ghcr.io/concrete5-community/docker5:5.7.5.13`<br />`ghcr.io/concrete5-community/docker5:5.7.5`<br />`ghcr.io/concrete5-community/docker5:5` |
+| 5.7.5.13-full | 5.7.5-full<br />5-full | elemental_full | 5.6 | `ghcr.io/concrete5-community/docker5:5.7.5.13-full`<br />`ghcr.io/concrete5-community/docker5:5.7.5-full`<br />`ghcr.io/concrete5-community/docker5:5-full` |
 <!-- END OF STABLE VERSIONS TABLE -->
 
 You can also try the latest development versions, built directly from the official git repository.
@@ -37,6 +113,16 @@ You can also try the latest development versions, built directly from the offici
 <!-- #                                                         # -->
 <!-- ########################################################### -->
 <!-- START OF DEVELOPMENT VERSIONS TABLE -->
+| Branch | Starting Point | Default PHP Version | Image |
+|:---:|---|:---:|---|
+| [9.4.x](https://github.com/concretecms/concretecms/tree/9.4.x) | atomik_blank | 8.2 | `ghcr.io/concrete5-community/docker5:9.4.x` |
+| [9.4.x](https://github.com/concretecms/concretecms/tree/9.4.x) | atomik_full | 8.2 | `ghcr.io/concrete5-community/docker5:9.4.x-full` |
+| [9.3.x](https://github.com/concretecms/concretecms/tree/9.3.x) | atomik_blank | 8.2 | `ghcr.io/concrete5-community/docker5:9.3.x` |
+| [9.3.x](https://github.com/concretecms/concretecms/tree/9.3.x) | atomik_full | 8.2 | `ghcr.io/concrete5-community/docker5:9.3.x-full` |
+| [9.2.x](https://github.com/concretecms/concretecms/tree/9.2.x) | atomik_blank | 8.2 | `ghcr.io/concrete5-community/docker5:9.2.x` |
+| [9.2.x](https://github.com/concretecms/concretecms/tree/9.2.x) | atomik_full | 8.2 | `ghcr.io/concrete5-community/docker5:9.2.x-full` |
+| [8.5.x](https://github.com/concretecms/concretecms/tree/8.5.x) | elemental_blank | 7.4 | `ghcr.io/concrete5-community/docker5:8.5.x` |
+| [8.5.x](https://github.com/concretecms/concretecms/tree/8.5.x) | elemental_full | 7.4 | `ghcr.io/concrete5-community/docker5:8.5.x-full` |
 <!-- END OF DEVELOPMENT VERSIONS TABLE -->
 
 ## References
