@@ -17,21 +17,27 @@ Where:
 
 You can then install the package through the web interface or through the CLI interface (`c5 c5:package:install package_handle`).
 
-## Development versions
+## Available docker tags 
 
-In addition to the official releases, you can also use the development versions of Concrete (updated twice a day).
+Here's the list of the available docker images:
 
-At the time of writing, the development branches are:
+<!-- ########################################################### -->
+<!-- #                                                         # -->
+<!-- #  DO NOT EDIT THIS TABLE: IT IS GENERATED AUTOMATICALLY  # -->
+<!-- #                                                         # -->
+<!-- ########################################################### -->
+<!-- START OF STABLE VERSIONS TABLE -->
+<!-- END OF STABLE VERSIONS TABLE -->
 
-- `8.5.x`
-- `9.2.x`
-- `9.3.x`
+You can also try the latest development versions, built directly from the official git repository.
 
-For example, to use `9.3.x` (with full sample content), you can use this image:
-
-```
-ghcr.io/concrete5-community/docker5:9.3.x-full
-```
+<!-- ########################################################### -->
+<!-- #                                                         # -->
+<!-- #  DO NOT EDIT THIS TABLE: IT IS GENERATED AUTOMATICALLY  # -->
+<!-- #                                                         # -->
+<!-- ########################################################### -->
+<!-- START OF DEVELOPMENT VERSIONS TABLE -->
+<!-- END OF DEVELOPMENT VERSIONS TABLE -->
 
 ## References
 
