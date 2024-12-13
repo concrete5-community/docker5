@@ -102,5 +102,5 @@ jobs:
           git add README.md
           git config user.name GitHub
           git config user.email noreply@github.com
-          git commit -m 'Update po from Transifex'
+          git commit -m 'Update docker tags'
           git push
