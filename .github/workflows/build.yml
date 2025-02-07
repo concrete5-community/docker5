@@ -233,7 +233,7 @@ jobs:
             echo 'No changes'
           else
             git config --local user.name 'GitHub Actions'
-            git config --local user.email 'noreply@github.com'
+            git config --local user.email noreply@github.com
             git add data/matrix.json
             git commit -m 'Update data matrix'
             git push
