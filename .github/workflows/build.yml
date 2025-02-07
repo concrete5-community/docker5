@@ -25,10 +25,15 @@ on:
       - publish
   workflow_dispatch:
     inputs:
-      publish:
-        description: Publish
-        type: boolean
-        required: false
+      operation:
+        description: Operation
+        required: true
+        default: build
+        type: choice
+        options:
+          - build
+          - publish
+          - update-data-matrix-only
 
 jobs:
 
@@ -71,14 +76,7 @@ jobs:
               action=build
               ;;
             workflow_dispatch)
-              case '${{ inputs.publish }}' in
-                t* | y* | 1)
-                  action=publish
-                  ;;
-                *)
-                  action=build
-                  ;;
-              esac
+              action='${{ inputs.operation }}'
               ;;
           esac
           echo "action=$action" >> $GITHUB_OUTPUT
@@ -94,7 +92,7 @@ jobs:
     needs:
       - check_envoronment
     runs-on: ubuntu-latest
-    if: needs.check_envoronment.outputs.action != 'none'
+    if: needs.check_envoronment.outputs.action == 'build' || needs.check_envoronment.outputs.action == 'publish'
     steps:
       -
         name: Checkout
@@ -155,7 +153,7 @@ jobs:
       - check_envoronment
       - build_base
       - generate_matrix
-    if: needs.check_envoronment.outputs.action != 'none'
+    if: needs.check_envoronment.outputs.action == 'build' || needs.check_envoronment.outputs.action == 'publish'
     strategy:
       matrix:
         data: ${{ fromJSON(needs.generate_matrix.outputs.generated-matrix) }}
@@ -215,8 +213,7 @@ jobs:
     needs:
       - check_envoronment
       - generate_matrix
-      - build
-    if: needs.check_envoronment.outputs.action == 'publish'
+    if: needs.check_envoronment.outputs.action == 'publish' || needs.check_envoronment.outputs.action == 'update-data-matrix-only'
     steps:
       -
         name: Checkout
@@ -226,6 +223,9 @@ jobs:
         env:
           GENERATED_MATRIX: ${{ needs.generate_matrix.outputs.generated-matrix }}
         run: printf '%s' "$GENERATED_MATRIX" >data/matrix.json
+      -
+        name: Print data matrix
+        run: cat data/matrix.json
       -
         name: Commit data matrix
         run: |
