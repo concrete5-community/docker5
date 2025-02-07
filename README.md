@@ -29,8 +29,8 @@ Here's the list of the available docker images:
 <!-- START OF STABLE VERSIONS TABLE -->
 | Version | Aliases | Starting Point | Default PHP Version | Images |
 |:---:|:---:|---|:---:|---|
-| 9.3.9 | 9.3<br />9<br />latest | atomik_blank | 8.2 | `ghcr.io/concrete5-community/docker5:9.3.9`<br />`ghcr.io/concrete5-community/docker5:9.3`<br />`ghcr.io/concrete5-community/docker5:9`<br />`ghcr.io/concrete5-community/docker5:latest` |
-| 9.3.9-full | 9.3-full<br />9-full<br />latest-full | atomik_full | 8.2 | `ghcr.io/concrete5-community/docker5:9.3.9-full`<br />`ghcr.io/concrete5-community/docker5:9.3-full`<br />`ghcr.io/concrete5-community/docker5:9-full`<br />`ghcr.io/concrete5-community/docker5:latest-full` |
+| 9.3.9 | latest<br />9<br />9.3 | atomik_blank | 8.2 | `ghcr.io/concrete5-community/docker5:9.3.9`<br />`ghcr.io/concrete5-community/docker5:latest`<br />`ghcr.io/concrete5-community/docker5:9`<br />`ghcr.io/concrete5-community/docker5:9.3` |
+| 9.3.9-full | latest-full<br />9-full<br />9.3-full | atomik_full | 8.2 | `ghcr.io/concrete5-community/docker5:9.3.9-full`<br />`ghcr.io/concrete5-community/docker5:latest-full`<br />`ghcr.io/concrete5-community/docker5:9-full`<br />`ghcr.io/concrete5-community/docker5:9.3-full` |
 | 9.3.8 |  | atomik_blank | 8.2 | `ghcr.io/concrete5-community/docker5:9.3.8` |
 | 9.3.8-full |  | atomik_full | 8.2 | `ghcr.io/concrete5-community/docker5:9.3.8-full` |
 | 9.3.7 |  | atomik_blank | 8.2 | `ghcr.io/concrete5-community/docker5:9.3.7` |
@@ -77,8 +77,8 @@ Here's the list of the available docker images:
 | 9.0.2-full | 9.0-full | atomik_full | 8.1 | `ghcr.io/concrete5-community/docker5:9.0.2-full`<br />`ghcr.io/concrete5-community/docker5:9.0-full` |
 | 9.0.1 |  | elemental_blank | 8.1 | `ghcr.io/concrete5-community/docker5:9.0.1` |
 | 9.0.1-full |  | atomik_full | 8.1 | `ghcr.io/concrete5-community/docker5:9.0.1-full` |
-| 8.5.19 | 8.5<br />8 | elemental_blank | 7.4 | `ghcr.io/concrete5-community/docker5:8.5.19`<br />`ghcr.io/concrete5-community/docker5:8.5`<br />`ghcr.io/concrete5-community/docker5:8` |
-| 8.5.19-full | 8.5-full<br />8-full | elemental_full | 7.4 | `ghcr.io/concrete5-community/docker5:8.5.19-full`<br />`ghcr.io/concrete5-community/docker5:8.5-full`<br />`ghcr.io/concrete5-community/docker5:8-full` |
+| 8.5.19 | 8<br />8.5 | elemental_blank | 7.4 | `ghcr.io/concrete5-community/docker5:8.5.19`<br />`ghcr.io/concrete5-community/docker5:8`<br />`ghcr.io/concrete5-community/docker5:8.5` |
+| 8.5.19-full | 8-full<br />8.5-full | elemental_full | 7.4 | `ghcr.io/concrete5-community/docker5:8.5.19-full`<br />`ghcr.io/concrete5-community/docker5:8-full`<br />`ghcr.io/concrete5-community/docker5:8.5-full` |
 | 8.5.18 |  | elemental_blank | 7.4 | `ghcr.io/concrete5-community/docker5:8.5.18` |
 | 8.5.18-full |  | elemental_full | 7.4 | `ghcr.io/concrete5-community/docker5:8.5.18-full` |
 | 8.5.17 |  | elemental_blank | 7.4 | `ghcr.io/concrete5-community/docker5:8.5.17` |
@@ -103,8 +103,8 @@ Here's the list of the available docker images:
 | 8.5.4-full |  | elemental_full | 7.4 | `ghcr.io/concrete5-community/docker5:8.5.4-full` |
 | 8.5.2 |  | elemental_blank | 7.4 | `ghcr.io/concrete5-community/docker5:8.5.2` |
 | 8.5.2-full |  | elemental_full | 7.4 | `ghcr.io/concrete5-community/docker5:8.5.2-full` |
-| 5.7.5.13 | 5.7.5<br />5.7 | elemental_blank | 5.6 | `ghcr.io/concrete5-community/docker5:5.7.5.13`<br />`ghcr.io/concrete5-community/docker5:5.7.5`<br />`ghcr.io/concrete5-community/docker5:5.7` |
-| 5.7.5.13-full | 5.7.5-full<br />5.7-full | elemental_full | 5.6 | `ghcr.io/concrete5-community/docker5:5.7.5.13-full`<br />`ghcr.io/concrete5-community/docker5:5.7.5-full`<br />`ghcr.io/concrete5-community/docker5:5.7-full` |
+| 5.7.5.13 | 5.7<br />5.7.5 | elemental_blank | 5.6 | `ghcr.io/concrete5-community/docker5:5.7.5.13`<br />`ghcr.io/concrete5-community/docker5:5.7`<br />`ghcr.io/concrete5-community/docker5:5.7.5` |
+| 5.7.5.13-full | 5.7-full<br />5.7.5-full | elemental_full | 5.6 | `ghcr.io/concrete5-community/docker5:5.7.5.13-full`<br />`ghcr.io/concrete5-community/docker5:5.7-full`<br />`ghcr.io/concrete5-community/docker5:5.7.5-full` |
 <!-- END OF STABLE VERSIONS TABLE -->
 
 You can also try the latest development versions, built directly from the official git repository.
