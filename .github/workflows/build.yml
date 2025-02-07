@@ -208,3 +208,33 @@ jobs:
         name: Publish image
         if: needs.check_envoronment.outputs.action == 'publish'
         run: docker push  --all-tags ghcr.io/concrete5-community/docker5
+
+  store-data-matrix:
+    name: Store data matrix
+    runs-on: ubuntu-latest
+    needs:
+      - check_envoronment
+      - generate_matrix
+      - build
+    if: needs.check_envoronment.outputs.action == 'publish'
+    steps:
+      -
+        name: Checkout
+        uses: actions/checkout@v4
+      -
+        name: Store data matrix
+        env:
+          GENERATED_MATRIX: ${{ needs.generate_matrix.outputs.generated-matrix }}
+        run: printf '%s' "$GENERATED_MATRIX" >data/matrix.json
+      -
+        name: Commit data matrix
+        run: |
+          if git diff --color=always --exit-code data/matrix.json; then
+            echo 'No changes'
+          else
+            git config --local user.name 'GitHub Actions'
+            git config --local user.email noreply@github.com
+            git add data/matrix.json
+            git commit -m 'Update data matrix'
+            git push
+          fi
