@@ -187,23 +187,24 @@ readonly class Version
 
     public function serialize(array &$result, array &$alreadySerializedVersions): void
     {
+        $versions = [$this->version];
+        if ($this->isDevVersion === false) {
+            $versions[] = VERSIONID_LATEST;
+        }
         if ($this->isDevVersion) {
-            $versions = [$this->version];
             foreach ([
-                $this->majorMinorVersion . DEV_VERSIONS_SUFFIX,
                 $this->majorVersion . DEV_VERSIONS_SUFFIX,
+                $this->majorMinorVersion . DEV_VERSIONS_SUFFIX,
             ] as $v) {
                 if (!in_array($v, $versions, true)) {
                     $versions[] = $v;
                 }
             }
         } else {
-            $versions = [$this->version, $this->majorMinorVersion, $this->majorVersion];
+            $versions[] = $this->majorVersion;
+            $versions[] = $this->majorMinorVersion;
         }
         $newVersions = array_values(array_diff($versions, $alreadySerializedVersions));
-        if ($this->isDevVersion === false && !in_array(VERSIONID_LATEST, $alreadySerializedVersions, true)) {
-            $newVersions[] = VERSIONID_LATEST;
-        }
         $result[] = $this->serializeVersions($newVersions, false);
         $result[] = $this->serializeVersions($newVersions, true);
         $alreadySerializedVersions = [...$alreadySerializedVersions, ...$newVersions];

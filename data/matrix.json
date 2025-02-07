@@ -51,7 +51,7 @@
         "c5_startingpoint": "atomik_blank",
         "patch_environment_only": "N",
         "image_tag": "9.3.9",
-        "additional_tags": "9.3 9 latest"
+        "additional_tags": "latest 9 9.3"
     },
     {
         "php_version": "8.2",
@@ -61,7 +61,7 @@
         "c5_startingpoint": "atomik_full",
         "patch_environment_only": "N",
         "image_tag": "9.3.9-full",
-        "additional_tags": "9.3-full 9-full latest-full"
+        "additional_tags": "latest-full 9-full 9.3-full"
     },
     {
         "php_version": "8.2",
@@ -575,7 +575,7 @@
         "c5_startingpoint": "elemental_blank",
         "patch_environment_only": "Y",
         "image_tag": "8.5.19",
-        "additional_tags": "8.5 8"
+        "additional_tags": "8 8.5"
     },
     {
         "php_version": "7.4",
@@ -585,7 +585,7 @@
         "c5_startingpoint": "elemental_full",
         "patch_environment_only": "Y",
         "image_tag": "8.5.19-full",
-        "additional_tags": "8.5-full 8-full"
+        "additional_tags": "8-full 8.5-full"
     },
     {
         "php_version": "7.4",
@@ -835,7 +835,7 @@
         "c5_startingpoint": "elemental_blank",
         "patch_environment_only": "N",
         "image_tag": "5.7.5.13",
-        "additional_tags": "5.7.5 5.7"
+        "additional_tags": "5.7 5.7.5"
     },
     {
         "php_version": "5.6",
@@ -845,6 +845,6 @@
         "c5_startingpoint": "elemental_full",
         "patch_environment_only": "N",
         "image_tag": "5.7.5.13-full",
-        "additional_tags": "5.7.5-full 5.7-full"
+        "additional_tags": "5.7-full 5.7.5-full"
     }
 ]
