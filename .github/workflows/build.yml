@@ -224,12 +224,10 @@ jobs:
           GENERATED_MATRIX: ${{ needs.generate_matrix.outputs.generated-matrix }}
         run: printf '%s' "$GENERATED_MATRIX" >data/matrix.json
       -
-        name: Print data matrix
-        run: cat data/matrix.json
-      -
         name: Commit data matrix
         run: |
-          if git diff --color=always --exit-code data/matrix.json; then
+          git add data/matrix.json
+          if git diff --cached --color=always --exit-code data/matrix.json; then
             echo 'No changes'
           else
             git config --local user.name 'GitHub Actions'
