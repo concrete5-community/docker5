@@ -1,5 +1,10 @@
 <template>
-  <div class="container">
+  <header class="bg-primary sticky-md-top">
+    <div class="container py-2">
+      <h1><a class="text-white text-decoration-none" href="https://github.com/concrete5-community/docker5">docker5</a></h1>
+    </div>
+  </header>
+  <main class="container">
     <fieldset>
       <legend>Concrete version</legend>
       <div class="row">
@@ -98,8 +103,7 @@
         </div>
       </template>
     </fieldset>
-
-</div>
+  </main>
 </template>
 
 <script setup lang="ts">
