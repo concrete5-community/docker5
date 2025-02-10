@@ -55,8 +55,9 @@
     <fieldset class="mt-4">
       <legend>Mapped folders</legend>
       <div class="row">
-        <table class="table table-sm table-striped">
+        <table class="table table-sm table-striped table-hover">
           <colgroup>
+            <col>
             <col>
             <col style="width: 50%" />
             <col style="width: 50%" />
@@ -64,12 +65,16 @@
           <thead>
             <tr>
               <th></th>
+              <th></th>
               <th>Host (physical PC)</th>
               <th>Guest (Docker container)</th>
             </tr>
           </thead>
           <tbody>
             <tr v-for="(mf, i) in mappedFolders">
+              <td class="text-center">
+                #{{ i + 1 }}
+              </td>
               <td class="text-center">
                 <button type="button" class="btn btn-sm btn-light" @click.prevent="mappedFolders.splice(i, 1)">&#x274C;</button>
               </td>
@@ -79,6 +84,7 @@
           </tbody>
           <tfoot>
             <tr>
+              <td></td>
               <td><button type="button" class="btn btn-sm btn-light" @click.prevent="mappedFolders.push({host: '', guest: ''})">&#x2795;</button></td>
               <td></td>
               <td class="small ps-2 align-top">
@@ -94,7 +100,10 @@
       <legend>Result</legend>
       <div class="alert mt-3" :class="`alert-${resultLine.messageClass}`" v-if="resultLine.messageClass" style="white-space: pre-wrap;">{{ resultLine.result }}</div>
       <template v-else>
-        <textarea readonly class="form-control code" style="font-family: var(--bs-font-monospace)" rows="3">{{ resultLine.result }}</textarea>
+        <div class="d5-result">
+          <button type="button" class="d5-copy btn btn-sm btn-secondary" @click.prevent="copyResult()" title="Copy to clipboard" ref="d5_copy">&#x1F4CB;</button>
+          <textarea readonly class="form-control code" style="font-family: var(--bs-font-monospace)" rows="3">{{ resultLine.result }}</textarea>
+        </div>
         <div v-if="getPortByGuest(80)?.expose" class="small">
           Open <a target="_blank" :href="`http://localhost:${getPortByGuest(80)?.host}`">http://localhost:{{ getPortByGuest(80)?.host }}</a> in your browser to visit the website.
         </div>
@@ -295,10 +304,10 @@ const resultLine = computed<ResultLine>(() => {
         return;
       }
       if (mf.host === '') {
-        throw new Error(`Host path is empty in mapped folder ${i + 1}`);
+        throw new Error(`Host path is empty in mapped folder #${i + 1}`);
       }
       if (mf.guest === '') {
-        throw new Error(`Guest path is empty in mapped folder ${i + 1}`);
+        throw new Error(`Guest path is empty in mapped folder #${i + 1}`);
       }
       command += ` -v ${q(mf.host + ':' + mf.guest)}`;
     });
@@ -315,6 +324,27 @@ const resultLine = computed<ResultLine>(() => {
   }
 });
 
+const d5_copy = ref<HTMLButtonElement|null>(null);
+function copyResult() {
+  try {
+    window.navigator.clipboard.writeText(resultLine.value.result);
+  } catch (e: any) {
+    window.alert(e.message || e.toString() || 'Unknown error');
+    return;
+  }
+  if (d5_copy.value) {
+    d5_copy.value.textContent = '\u2713';
+    d5_copy.value.classList.remove('btn-secondary');
+    d5_copy.value.classList.add('btn-success',);
+    setTimeout(() => {
+      if (d5_copy.value) {
+        d5_copy.value.classList.remove('btn-success');
+        d5_copy.value.classList.add('btn-secondary');
+        d5_copy.value.textContent = '\ud83d\udccb';
+      }
+    }, 500);
+  }
+}
 watch(imageKind, () => {
   if (versionDisplayName.value !== '' && ! versionDisplayNames.value.includes(versionDisplayName.value)) {
     versionDisplayName.value = '';
@@ -408,3 +438,26 @@ onMounted(() => {
 });
 
 </script>
+
+<style lang="css" scoped>
+.d5-result textarea {
+    resize: vertical;
+    height: 7rem;
+    padding-left: 1rem;
+    padding-right: 1rem;
+}
+.d5-result {
+  position: relative;
+} 
+.d5-copy {
+  position: absolute;
+  right: 0;
+  opacity: 0.5;
+  zoom: 0.6;
+  transition: transform .2s;
+}
+.d5-copy:hover {
+  opacity: 1;
+  transform: scale(1.67) translate(-16.7%, 16.7%);
+}
+</style>
