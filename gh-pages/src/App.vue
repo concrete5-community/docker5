@@ -78,7 +78,7 @@
               <td class="text-center">
                 <button type="button" class="btn btn-sm btn-light" @click.prevent="mappedFolders.splice(i, 1)">&#x274C;</button>
               </td>
-              <td><input type="text" v-model.trim="mf.host" class="form-control form-control-sm" /></td>
+              <td><input type="text" v-model.trim="mf.host" @paste="autoFillGuestMappedFolder(mf)" class="form-control form-control-sm" /></td>
               <td><input type="text" v-model.trim="mf.guest" class="form-control form-control-sm" /></td>
             </tr>
           </tbody>
@@ -436,6 +436,33 @@ onMounted(() => {
     console.error(e);
   }
 });
+
+function autoFillGuestMappedFolder(mf: MappedFolder) {
+  setTimeout(() => {
+    debugger;
+    if (mf.guest !== '') {
+      return;
+    }
+    const host = mf.host.replace(/\\/g, '/').replace(/\/+$/, '');
+    let i: RegExpMatchArray |null;
+    if ((i = host.match(/\/packages\/(\w+)$/)) !== null) {
+      mf.guest = '/app/packages/' + i[1];
+      return;
+    }
+    if ((i = host.match(/\/blocks\/(\w+)$/)) !== null) {
+      mf.guest = '/app/application/blocks/' + i[1];
+      return;
+    }
+    if (host.match(/\/packages$/) !== null) {
+      mf.guest = '/app/packages';
+      return;
+    }
+    if (host.match(/\/blocks$/)) {
+      mf.guest = '/app/application/blocks';
+      return;
+    }
+  }, 50);
+}
 
 </script>
 
