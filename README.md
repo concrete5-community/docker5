@@ -64,8 +64,10 @@ Here's the list of the available docker images:
 | 9.0.2-full | 9.0-full | atomik_full | 8.1 | `ghcr.io/concrete5-community/docker5:9.0.2-full`<br />`ghcr.io/concrete5-community/docker5:9.0-full` |
 | 9.0.1 |  | elemental_blank | 8.1 | `ghcr.io/concrete5-community/docker5:9.0.1` |
 | 9.0.1-full |  | atomik_full | 8.1 | `ghcr.io/concrete5-community/docker5:9.0.1-full` |
-| 8.5.19 | 8<br />8.5 | elemental_blank | 7.4 | `ghcr.io/concrete5-community/docker5:8.5.19`<br />`ghcr.io/concrete5-community/docker5:8`<br />`ghcr.io/concrete5-community/docker5:8.5` |
-| 8.5.19-full | 8-full<br />8.5-full | elemental_full | 7.4 | `ghcr.io/concrete5-community/docker5:8.5.19-full`<br />`ghcr.io/concrete5-community/docker5:8-full`<br />`ghcr.io/concrete5-community/docker5:8.5-full` |
+| 8.5.20 | 8<br />8.5 | elemental_blank | 7.4 | `ghcr.io/concrete5-community/docker5:8.5.20`<br />`ghcr.io/concrete5-community/docker5:8`<br />`ghcr.io/concrete5-community/docker5:8.5` |
+| 8.5.20-full | 8-full<br />8.5-full | elemental_full | 7.4 | `ghcr.io/concrete5-community/docker5:8.5.20-full`<br />`ghcr.io/concrete5-community/docker5:8-full`<br />`ghcr.io/concrete5-community/docker5:8.5-full` |
+| 8.5.19 |  | elemental_blank | 7.4 | `ghcr.io/concrete5-community/docker5:8.5.19` |
+| 8.5.19-full |  | elemental_full | 7.4 | `ghcr.io/concrete5-community/docker5:8.5.19-full` |
 | 8.5.18 |  | elemental_blank | 7.4 | `ghcr.io/concrete5-community/docker5:8.5.18` |
 | 8.5.18-full |  | elemental_full | 7.4 | `ghcr.io/concrete5-community/docker5:8.5.18-full` |
 | 8.5.17 |  | elemental_blank | 7.4 | `ghcr.io/concrete5-community/docker5:8.5.17` |
