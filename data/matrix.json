@@ -24,6 +24,26 @@
     {
         "php_version": "8.2",
         "composer_version": "2",
+        "phpunit_version": "8",
+        "c5_archive": "https://www.concretecms.org/download_file/383fe0e4-c335-4a41-b4d1-7f0c77cf7843/2718",
+        "c5_startingpoint": "atomik_blank",
+        "patch_environment_only": "N",
+        "image_tag": "9.4.0",
+        "additional_tags": "latest 9 9.4"
+    },
+    {
+        "php_version": "8.2",
+        "composer_version": "2",
+        "phpunit_version": "8",
+        "c5_archive": "https://www.concretecms.org/download_file/383fe0e4-c335-4a41-b4d1-7f0c77cf7843/2718",
+        "c5_startingpoint": "atomik_full",
+        "patch_environment_only": "N",
+        "image_tag": "9.4.0-full",
+        "additional_tags": "latest-full 9-full 9.4-full"
+    },
+    {
+        "php_version": "8.2",
+        "composer_version": "2",
         "phpunit_version": "ccm",
         "c5_archive": "https://github.com/concretecms/concretecms/archive/9.3.x.tar.gz",
         "c5_startingpoint": "atomik_blank",
@@ -51,7 +71,7 @@
         "c5_startingpoint": "atomik_blank",
         "patch_environment_only": "N",
         "image_tag": "9.3.9",
-        "additional_tags": "latest 9 9.3"
+        "additional_tags": "9.3"
     },
     {
         "php_version": "8.2",
@@ -61,7 +81,7 @@
         "c5_startingpoint": "atomik_full",
         "patch_environment_only": "N",
         "image_tag": "9.3.9-full",
-        "additional_tags": "latest-full 9-full 9.3-full"
+        "additional_tags": "9.3-full"
     },
     {
         "php_version": "8.2",
