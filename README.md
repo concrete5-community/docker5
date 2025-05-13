@@ -16,8 +16,10 @@ Here's the list of the available docker images:
 <!-- START OF STABLE VERSIONS TABLE -->
 | Version | Aliases | Starting Point | Default PHP Version | Images |
 |:---:|:---:|---|:---:|---|
-| 9.4.0 | latest<br />9<br />9.4 | atomik_blank | 8.2 | `ghcr.io/concrete5-community/docker5:9.4.0`<br />`ghcr.io/concrete5-community/docker5:latest`<br />`ghcr.io/concrete5-community/docker5:9`<br />`ghcr.io/concrete5-community/docker5:9.4` |
-| 9.4.0-full | latest-full<br />9-full<br />9.4-full | atomik_full | 8.2 | `ghcr.io/concrete5-community/docker5:9.4.0-full`<br />`ghcr.io/concrete5-community/docker5:latest-full`<br />`ghcr.io/concrete5-community/docker5:9-full`<br />`ghcr.io/concrete5-community/docker5:9.4-full` |
+| 9.4.1 | latest<br />9<br />9.4 | atomik_blank | 8.2 | `ghcr.io/concrete5-community/docker5:9.4.1`<br />`ghcr.io/concrete5-community/docker5:latest`<br />`ghcr.io/concrete5-community/docker5:9`<br />`ghcr.io/concrete5-community/docker5:9.4` |
+| 9.4.1-full | latest-full<br />9-full<br />9.4-full | atomik_full | 8.2 | `ghcr.io/concrete5-community/docker5:9.4.1-full`<br />`ghcr.io/concrete5-community/docker5:latest-full`<br />`ghcr.io/concrete5-community/docker5:9-full`<br />`ghcr.io/concrete5-community/docker5:9.4-full` |
+| 9.4.0 |  | atomik_blank | 8.2 | `ghcr.io/concrete5-community/docker5:9.4.0` |
+| 9.4.0-full |  | atomik_full | 8.2 | `ghcr.io/concrete5-community/docker5:9.4.0-full` |
 | 9.3.9 | 9.3 | atomik_blank | 8.2 | `ghcr.io/concrete5-community/docker5:9.3.9`<br />`ghcr.io/concrete5-community/docker5:9.3` |
 | 9.3.9-full | 9.3-full | atomik_full | 8.2 | `ghcr.io/concrete5-community/docker5:9.3.9-full`<br />`ghcr.io/concrete5-community/docker5:9.3-full` |
 | 9.3.8 |  | atomik_blank | 8.2 | `ghcr.io/concrete5-community/docker5:9.3.8` |
