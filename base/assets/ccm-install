@@ -1,0 +1,90 @@
+#!/bin/sh
+
+set -o nounset
+set -o errexit
+
+script_name=$0
+
+exitWithSyntax() {
+    printf 'Syntax: %s <blocks_cloner>\n\nInstall or update additional stuff\n\n' "$script_name" >&2
+    exit 1
+}
+
+installBlocksCloner() {
+  printf 'Installing Blocks Cloner...\n'
+  if [ -d "/app/packages/blocks_cloner" ]; then
+    installBlocksCloner_upgrading=1
+  else
+    installBlocksCloner_upgrading=0
+  fi
+  printf -- '- detecting latest version... '
+  installBlocksCloner_releaseUrl="$(curl -sSf -X HEAD -I https://github.com/concrete5-community/blocks_cloner/releases/latest | sed 's/\r$//g' | grep -Ei '^Location:' | head -n1 | sed -E 's/^Location:[ ]*//i')"
+  if [ $? -ne 0 ] || [ -z "$installBlocksCloner_releaseUrl" ]; then
+    echo "Failed to retrieve the URL of the latest version of Blocks Cloner." >&2
+    exit 1
+  fi
+  installBlocksCloner_tag="${installBlocksCloner_releaseUrl#*/releases/tag/}"
+  if [ -z "$installBlocksCloner_tag" ] || [ "$installBlocksCloner_tag" = "$installBlocksCloner_releaseUrl" ]; then
+    echo "Failed to determine the latest version of Blocks Cloner." >&2
+    exit 1
+  fi
+  printf '%s\n' "$installBlocksCloner_tag"
+  printf -- '- downloading... '
+  installBlocksCloner_tmpFile="$(mktemp -t blocks_cloner-XXXXXXXXXX.zip)"
+  if ! curl -sSfL -o "$installBlocksCloner_tmpFile" "https://github.com/concrete5-community/blocks_cloner/releases/download/$installBlocksCloner_tag/blocks_cloner-v$installBlocksCloner_tag.zip"; then
+    rm -f "$installBlocksCloner_tmpFile" || true
+    echo "Failed to download Blocks Cloner." >&2
+    exit 1
+  fi
+  chmod 777 /app/packages || true 
+  chmod 644 "$installBlocksCloner_tmpFile"
+  printf 'done\n'
+  if [ $installBlocksCloner_upgrading -eq 1 ]; then
+    printf -- '- deleting old version... '
+    rm -r /app/packages/blocks_cloner
+    printf 'done\n'
+  fi
+  printf -- '- extracting... '
+  if ! sudo -u www-data unzip -q -o "$installBlocksCloner_tmpFile" -d /app/packages; then
+    rm -f "$installBlocksCloner_tmpFile" || true
+    echo "Failed to extract Blocks Cloner." >&2
+    exit 1
+  fi
+  rm -f "$installBlocksCloner_tmpFile" || true
+  printf 'done\n'
+  cd /app
+  if [ $installBlocksCloner_upgrading -eq 1 ]; then
+    c5 c5:update-package blocks_cloner
+  else
+    c5 c5:install-package blocks_cloner
+  fi
+  cd - >/dev/null || true
+}
+
+subject=
+while :; do
+    if test $# -lt 1; then
+        break
+    fi
+    case "$1" in
+        blocks_cloner)
+            if [ -n "$subject" ]; then
+                exitWithSyntax
+            fi
+            subject=$1
+            ;;
+        *)
+            exitWithSyntax
+            ;;
+    esac
+    shift
+done
+if [ -z "$subject" ]; then
+  exitWithSyntax
+fi
+
+case "$subject" in
+    blocks_cloner)
+        installBlocksCloner
+        ;;
+esac

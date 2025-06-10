@@ -9,6 +9,7 @@ ARG PHP_EXTENSIONS_VSPECIFIC="bcmath bz2 curl exif ftp gd gmp imagick imap intl 
 ARG PHP_EXTENSIONS_COMMON="php-redis"
 
 COPY assets/ccm-help /usr/local/bin/
+COPY assets/ccm-install /usr/local/bin/
 COPY assets/ccm-service /usr/local/bin/
 COPY assets/switch-php /usr/local/bin/
 COPY assets/switch-composer /usr/local/bin/
