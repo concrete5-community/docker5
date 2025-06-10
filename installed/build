@@ -69,6 +69,22 @@ c5 c5:install \
 
 sudo -u www-data -- mkdir --mode=0755 -p /app/application/languages/site
 
+if [ "${CCM_INSTALL_BLOCKS_CLONER:-}" = Y ]; then
+    printTitle 'Installing Blocks Cloner'
+    blocksClonerSrcURL="$(curl -sSLf https://api.github.com/repos/concrete5-community/blocks_cloner/releases/latest | grep '"browser_download_url"' | grep -Eo 'https://[^"]+/blocks_cloner-v[^"]+.zip' | head -n 1)"
+    if [ $? -ne 0 ] || [ -z "$blocksClonerSrcURL" ]; then
+        echo 'Error: Could not find latest Blocks Cloner release.' >&2
+        exit 1
+    fi
+    cd /app/packages
+    curl -sSLf -o temp.zip "$blocksClonerSrcURL"
+    unset blocksClonerSrcURL
+    sudo -u www-data -- unzip -q temp.zip
+    rm temp.zip
+    cd - >/dev/null
+    c5 c5:install-package --no-ansi --no-interaction blocks_cloner
+fi
+
 c5 c5:config set -g concrete.seo.url_rewriting true
 c5 c5:config set -g concrete.mail.method smtp
 c5 c5:config set -g concrete.mail.methods.smtp.server 127.0.0.1

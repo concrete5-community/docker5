@@ -141,6 +141,10 @@ Source repository: https://github.com/concrete5-community/docker5
 docker5 images come with some service CLI commands.
 You can get a list of them by running the `ccm-help` CLI command.
 
+## Preinstalled Concrete packages
+
+Images with concrete5/ConcreteCMS version 8.5.4 or later come with [Blocks Cloner](https://github.com/concrete5-community/blocks_cloner) preinstalled.
+
 ## PHP Versions
 
 Every docker image contains multiple PHP versions: 5.6, 7.4, 8.1, and 8.2.

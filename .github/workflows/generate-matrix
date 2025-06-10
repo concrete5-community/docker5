@@ -121,6 +121,8 @@ readonly class Version
 
     public bool $patchEnvironmentOnly;
 
+    public bool $installBlocksCloner;
+
     public function __construct(public string $version,  public string $archiveUrl)
     {
         $matches = null;
@@ -183,6 +185,12 @@ readonly class Version
         } else {
             $this->patchEnvironmentOnly = false;
         }
+
+        if (version_compare($this->comparableVersion, '8.5.4') >= 0) {
+            $this->installBlocksCloner = true;
+        } else {
+            $this->installBlocksCloner = false;
+        }
     }
 
     public function serialize(array &$result, array &$alreadySerializedVersions): void
@@ -231,6 +239,7 @@ readonly class Version
             'c5_archive' => $this->archiveUrl,
             'c5_startingpoint' => $full ? $this->fullStartingPoint : $this->blankStartingPoint,
             'patch_environment_only' => $this->patchEnvironmentOnly ? 'Y' : 'N',
+            'install_blocks_cloner' => $this->installBlocksCloner ? 'Y' : 'N',
             'image_tag' => array_shift($versions),
             'additional_tags' => implode(' ', $versions),
         ];

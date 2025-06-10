@@ -64,6 +64,7 @@ jobs:
               --build-arg CCM_C5_ARCHIVE=https://codeload.github.com/concretecms/concretecms/tar.gz/${{ steps.check.outputs.BUILD_SHA1 }} \
               --build-arg CCM_STARTING_POINT=${{ matrix.data.c5_startingpoint }} \
               --build-arg CCM_PATCH_ENVIRONMENT_ONLY=${{ matrix.data.patch_environment_only }} \
+              --build-arg CCM_INSTALL_BLOCKS_CLONER=${{ matrix.data.install_blocks_cloner }} \
               --tag ghcr.io/concrete5-community/docker5:${{ matrix.data.image_tag }} \
               ./installed
           for additional_tag in ${{ matrix.data.additional_tags }}; do
