@@ -9,6 +9,7 @@ interface RawEntry {
     c5_archive: string;
     c5_startingpoint: string;
     patch_environment_only: YN;
+    install_blocks_cloner: YN;
     image_tag: string;
     additional_tags?: string;
     repo_branch?: string;
