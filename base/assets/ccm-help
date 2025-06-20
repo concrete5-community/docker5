@@ -12,7 +12,7 @@ docker5 images come with the following CLI commands:
   Invoke it without arguments to get some help.
 
 - ccm-install: install or update additional stuff
-  (for example: Blocks Cloner).
+  (for example: Blocks Cloner, concrete-cif).
 
 - switch-composer: change the composer version to be used.
   Invoke it without arguments to get some help.

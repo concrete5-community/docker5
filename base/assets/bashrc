@@ -18,7 +18,7 @@ complete -F _ccm_service ccm-service
 _ccm_install() {
     case $COMP_CWORD in
         1)
-            COMPREPLY=( $(compgen -W 'blocks_cloner' -- "${COMP_WORDS[COMP_CWORD]}") )
+            COMPREPLY=( $(compgen -W 'blocks_cloner concrete-cif' -- "${COMP_WORDS[COMP_CWORD]}") )
             ;;
         *)
             COMPREPLY=()

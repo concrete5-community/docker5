@@ -6,8 +6,28 @@ set -o errexit
 script_name=$0
 
 exitWithSyntax() {
-    printf 'Syntax: %s <blocks_cloner>\n\nInstall or update additional stuff\n\n' "$script_name" >&2
+    printf 'Syntax: %s <blocks_cloner|concrete-cif>\n\nInstall or update additional stuff\n\n' "$script_name" >&2
     exit 1
+}
+
+installJava() {
+  if command -v java >/dev/null 2>&1; then
+    return
+  fi
+  installJava_cleanupApk=1
+  if [ -d "/var/lib/apt/lists" ]; then
+      if find "/var/lib/apt/lists" -maxdepth 1 -mindepth 1 -print -quit | grep -q .; then
+          installJava_cleanupApk=0
+      fi
+  fi
+  printf 'Installing Java...\n'
+  apt-get update -qy
+  apt-get install -qy --no-install-recommends openjdk-21-jdk-headless
+  java -version
+  if [ $installJava_cleanupApk -eq 1 ]; then
+      apt-get clean -qy
+      rm -rf /var/lib/apt/lists/* || true
+  fi
 }
 
 installBlocksCloner() {
@@ -47,18 +67,36 @@ installBlocksCloner() {
   printf -- '- extracting... '
   if ! sudo -u www-data unzip -q -o "$installBlocksCloner_tmpFile" -d /app/packages; then
     rm -f "$installBlocksCloner_tmpFile" || true
+    if [ $installBlocksCloner_upgrading -eq 0 ]; then
+      rm -rf /app/packages/blocks_cloner || true
+    fi
     echo "Failed to extract Blocks Cloner." >&2
     exit 1
   fi
   rm -f "$installBlocksCloner_tmpFile" || true
   printf 'done\n'
+  ccm-service start db
   cd /app
   if [ $installBlocksCloner_upgrading -eq 1 ]; then
     c5 c5:update-package blocks_cloner
   else
-    c5 c5:install-package blocks_cloner
+    if ! c5 c5:install-package blocks_cloner; then
+      rm -rf /app/packages/blocks_cloner || true
+      cd - >/dev/null || true
+      exit 1
+    fi
   fi
   cd - >/dev/null || true
+}
+
+installConcreteCIF() {
+  installJava
+  printf 'Downloading Concrete CIF...\n'
+  curl -sSfL -o /usr/local/lib/concrete-cif.jar https://github.com/concretecms/concrete-cif/releases/latest/download/concrete-cif.jar
+  printf '#!/bin/sh\nexec java -jar /usr/local/lib/concrete-cif.jar "$@"\n' >/usr/local/bin/concrete-cif
+  chmod +x /usr/local/bin/concrete-cif
+  printf 'concrete-cif version: '
+  concrete-cif --version
 }
 
 subject=
@@ -68,6 +106,12 @@ while :; do
     fi
     case "$1" in
         blocks_cloner)
+            if [ -n "$subject" ]; then
+                exitWithSyntax
+            fi
+            subject=$1
+            ;;
+        concrete-cif)
             if [ -n "$subject" ]; then
                 exitWithSyntax
             fi
@@ -86,5 +130,8 @@ fi
 case "$subject" in
     blocks_cloner)
         installBlocksCloner
+        ;;
+    concrete-cif)
+        installConcreteCIF
         ;;
 esac

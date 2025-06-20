@@ -141,9 +141,25 @@ Source repository: https://github.com/concrete5-community/docker5
 docker5 images come with some service CLI commands.
 You can get a list of them by running the `ccm-help` CLI command.
 
-## Preinstalled Concrete packages
+## Installing additional components
 
-Images with concrete5/ConcreteCMS version 8.5.4 or later come with [Blocks Cloner](https://github.com/concrete5-community/blocks_cloner) preinstalled.
+You can install additional components with the `ccm-install` CLI command.
+
+### Blocks Cloner
+
+You can install [Blocks Cloner](https://github.com/concrete5-community/blocks_cloner) in a concrete5/ConcreteCMS version 8.5.4 or later come with:
+
+```sh
+ccm-install blocks_cloner
+```
+
+### Validator of CIF files
+
+You can install [concrete-cif](https://github.com/concretecms/concrete-cif) with:
+
+```sh
+ccm-install concrete-cif
+```
 
 ## PHP Versions
 

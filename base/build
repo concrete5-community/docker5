@@ -98,6 +98,7 @@ apt-get remove -qy --autoremove --purge software-properties-common
 mkdir /app
 chown www-data:www-data /app
 ccm-service stop
+apt-get clean -qy
 rm -rf /var/lib/apt/lists/*
 npm cache clean --force
 rm -rf $HOME/.npm/_logs/*.log
