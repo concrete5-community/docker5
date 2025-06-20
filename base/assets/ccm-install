@@ -6,8 +6,18 @@ set -o errexit
 script_name=$0
 
 exitWithSyntax() {
-    printf 'Syntax: %s <blocks_cloner>\n\nInstall or update additional stuff\n\n' "$script_name" >&2
+    printf 'Syntax: %s <blocks_cloner|concrete-cif>\n\nInstall or update additional stuff\n\n' "$script_name" >&2
     exit 1
+}
+
+installJava() {
+  if command -v java >/dev/null 2>&1; then
+    return
+  fi
+  printf 'Installing Java...\n'
+  apt-get update -qy
+  apt-get install -qy openjdk-21-jdk-headless
+   java -version
 }
 
 installBlocksCloner() {
@@ -47,6 +57,9 @@ installBlocksCloner() {
   printf -- '- extracting... '
   if ! sudo -u www-data unzip -q -o "$installBlocksCloner_tmpFile" -d /app/packages; then
     rm -f "$installBlocksCloner_tmpFile" || true
+    if [ $installBlocksCloner_upgrading -eq 0 ]; then
+      rm -rf /app/packages/blocks_cloner || true
+    fi
     echo "Failed to extract Blocks Cloner." >&2
     exit 1
   fi
@@ -56,9 +69,23 @@ installBlocksCloner() {
   if [ $installBlocksCloner_upgrading -eq 1 ]; then
     c5 c5:update-package blocks_cloner
   else
-    c5 c5:install-package blocks_cloner
+    if ! c5 c5:install-package blocks_cloner; then
+      rm -rf /app/packages/blocks_cloner || true
+      cd - >/dev/null || true
+      exit 1
+    fi
   fi
   cd - >/dev/null || true
+}
+
+installConcreteCIF() {
+  installJava
+  printf 'Downloading Concrete CIF...\n'
+  curl -sSfL -o /usr/local/bin/concrete-cif https://github.com/concretecms/concrete-cif/releases/latest/download/concrete-cif.jar
+  chmod +x /usr/local/bin/concrete-cif
+  printf 'concrete-cif version: '
+  concrete-cif --version
+  concrete-cif --help
 }
 
 subject=
@@ -68,6 +95,12 @@ while :; do
     fi
     case "$1" in
         blocks_cloner)
+            if [ -n "$subject" ]; then
+                exitWithSyntax
+            fi
+            subject=$1
+            ;;
+        concrete-cif)
             if [ -n "$subject" ]; then
                 exitWithSyntax
             fi
@@ -86,5 +119,8 @@ fi
 case "$subject" in
     blocks_cloner)
         installBlocksCloner
+        ;;
+    concrete-cif)
+        installConcreteCIF
         ;;
 esac

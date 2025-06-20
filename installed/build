@@ -69,11 +69,6 @@ c5 c5:install \
 
 sudo -u www-data -- mkdir --mode=0755 -p /app/application/languages/site
 
-if [ "${CCM_INSTALL_BLOCKS_CLONER:-}" = Y ]; then
-    printTitle 'Installing Blocks Cloner'
-    ccm-install blocks_cloner
-fi
-
 c5 c5:config set -g concrete.seo.url_rewriting true
 c5 c5:config set -g concrete.mail.method smtp
 c5 c5:config set -g concrete.mail.methods.smtp.server 127.0.0.1
