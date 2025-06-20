@@ -14,10 +14,20 @@ installJava() {
   if command -v java >/dev/null 2>&1; then
     return
   fi
+  installJava_cleanupApk=1
+  if [ -d "/var/lib/apt/lists" ]; then
+      if find "/var/lib/apt/lists" -maxdepth 1 -mindepth 1 -print -quit | grep -q .; then
+          installJava_cleanupApk=0
+      fi
+  fi
   printf 'Installing Java...\n'
   apt-get update -qy
   apt-get install -qy openjdk-21-jdk-headless
-   java -version
+  java -version
+  if [ $installJava_cleanupApk -eq 1 ]; then
+      apt-get clean -qy
+      rm -rf /var/lib/apt/lists/* || true
+  fi
 }
 
 installBlocksCloner() {
@@ -82,11 +92,11 @@ installBlocksCloner() {
 installConcreteCIF() {
   installJava
   printf 'Downloading Concrete CIF...\n'
-  curl -sSfL -o /usr/local/bin/concrete-cif https://github.com/concretecms/concrete-cif/releases/latest/download/concrete-cif.jar
+  curl -sSfL -o /usr/local/lib/concrete-cif.jar https://github.com/concretecms/concrete-cif/releases/latest/download/concrete-cif.jar
+  printf '#!/bin/sh\nexec java -jar /usr/local/lib/concrete-cif.jar "$@"\n' >/usr/local/bin/concrete-cif
   chmod +x /usr/local/bin/concrete-cif
   printf 'concrete-cif version: '
   concrete-cif --version
-  concrete-cif --help
 }
 
 subject=
