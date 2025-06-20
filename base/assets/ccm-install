@@ -22,7 +22,7 @@ installJava() {
   fi
   printf 'Installing Java...\n'
   apt-get update -qy
-  apt-get install -qy openjdk-21-jdk-headless
+  apt-get install -qy --no-install-recommends openjdk-21-jdk-headless
   java -version
   if [ $installJava_cleanupApk -eq 1 ]; then
       apt-get clean -qy
