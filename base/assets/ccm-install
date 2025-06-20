@@ -65,6 +65,7 @@ installBlocksCloner() {
   fi
   rm -f "$installBlocksCloner_tmpFile" || true
   printf 'done\n'
+  ccm-service start db
   cd /app
   if [ $installBlocksCloner_upgrading -eq 1 ]; then
     c5 c5:update-package blocks_cloner
