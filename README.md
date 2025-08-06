@@ -16,8 +16,10 @@ Here's the list of the available docker images:
 <!-- START OF STABLE VERSIONS TABLE -->
 | Version | Aliases | Starting Point | Default PHP Version | Images |
 |:---:|:---:|---|:---:|---|
-| 9.4.2 | latest<br />9<br />9.4 | atomik_blank | 8.2 | `ghcr.io/concrete5-community/docker5:9.4.2`<br />`ghcr.io/concrete5-community/docker5:latest`<br />`ghcr.io/concrete5-community/docker5:9`<br />`ghcr.io/concrete5-community/docker5:9.4` |
-| 9.4.2-full | latest-full<br />9-full<br />9.4-full | atomik_full | 8.2 | `ghcr.io/concrete5-community/docker5:9.4.2-full`<br />`ghcr.io/concrete5-community/docker5:latest-full`<br />`ghcr.io/concrete5-community/docker5:9-full`<br />`ghcr.io/concrete5-community/docker5:9.4-full` |
+| 9.4.3 | latest<br />9<br />9.4 | atomik_blank | 8.2 | `ghcr.io/concrete5-community/docker5:9.4.3`<br />`ghcr.io/concrete5-community/docker5:latest`<br />`ghcr.io/concrete5-community/docker5:9`<br />`ghcr.io/concrete5-community/docker5:9.4` |
+| 9.4.3-full | latest-full<br />9-full<br />9.4-full | atomik_full | 8.2 | `ghcr.io/concrete5-community/docker5:9.4.3-full`<br />`ghcr.io/concrete5-community/docker5:latest-full`<br />`ghcr.io/concrete5-community/docker5:9-full`<br />`ghcr.io/concrete5-community/docker5:9.4-full` |
+| 9.4.2 |  | atomik_blank | 8.2 | `ghcr.io/concrete5-community/docker5:9.4.2` |
+| 9.4.2-full |  | atomik_full | 8.2 | `ghcr.io/concrete5-community/docker5:9.4.2-full` |
 | 9.4.1 |  | atomik_blank | 8.2 | `ghcr.io/concrete5-community/docker5:9.4.1` |
 | 9.4.1-full |  | atomik_full | 8.2 | `ghcr.io/concrete5-community/docker5:9.4.1-full` |
 | 9.4.0 |  | atomik_blank | 8.2 | `ghcr.io/concrete5-community/docker5:9.4.0` |
@@ -70,8 +72,10 @@ Here's the list of the available docker images:
 | 9.0.2-full | 9.0-full | atomik_full | 8.1 | `ghcr.io/concrete5-community/docker5:9.0.2-full`<br />`ghcr.io/concrete5-community/docker5:9.0-full` |
 | 9.0.1 |  | elemental_blank | 8.1 | `ghcr.io/concrete5-community/docker5:9.0.1` |
 | 9.0.1-full |  | atomik_full | 8.1 | `ghcr.io/concrete5-community/docker5:9.0.1-full` |
-| 8.5.20 | 8<br />8.5 | elemental_blank | 7.4 | `ghcr.io/concrete5-community/docker5:8.5.20`<br />`ghcr.io/concrete5-community/docker5:8`<br />`ghcr.io/concrete5-community/docker5:8.5` |
-| 8.5.20-full | 8-full<br />8.5-full | elemental_full | 7.4 | `ghcr.io/concrete5-community/docker5:8.5.20-full`<br />`ghcr.io/concrete5-community/docker5:8-full`<br />`ghcr.io/concrete5-community/docker5:8.5-full` |
+| 8.5.21 | 8<br />8.5 | elemental_blank | 7.4 | `ghcr.io/concrete5-community/docker5:8.5.21`<br />`ghcr.io/concrete5-community/docker5:8`<br />`ghcr.io/concrete5-community/docker5:8.5` |
+| 8.5.21-full | 8-full<br />8.5-full | elemental_full | 7.4 | `ghcr.io/concrete5-community/docker5:8.5.21-full`<br />`ghcr.io/concrete5-community/docker5:8-full`<br />`ghcr.io/concrete5-community/docker5:8.5-full` |
+| 8.5.20 |  | elemental_blank | 7.4 | `ghcr.io/concrete5-community/docker5:8.5.20` |
+| 8.5.20-full |  | elemental_full | 7.4 | `ghcr.io/concrete5-community/docker5:8.5.20-full` |
 | 8.5.19 |  | elemental_blank | 7.4 | `ghcr.io/concrete5-community/docker5:8.5.19` |
 | 8.5.19-full |  | elemental_full | 7.4 | `ghcr.io/concrete5-community/docker5:8.5.19-full` |
 | 8.5.18 |  | elemental_blank | 7.4 | `ghcr.io/concrete5-community/docker5:8.5.18` |
