@@ -185,18 +185,18 @@ switch-php 7.4
 
 ## Composer Versions
 
-Every docker image contains both composer v1 and composer v2.
+Every docker image contains composer v1, composer v2 and v2.2.
 
 When using the default entry point you can override the default one by specifying the `CCM_COMPOSER_VERSION` environment variable, like this:
 
 ```bash
-docker run --rm -e "CCM_COMPOSER_VERSION=2" ghcr.io/concrete5-community/docker5:9.0.2-full
+docker run --rm -e "CCM_COMPOSER_VERSION=2.2" ghcr.io/concrete5-community/docker5:9.0.2-full
 ```
 
 From within the container you can use the `switch-composer` command:
 
 ```bash
-switch-composer 2
+switch-composer 2.2
 ```
 
 ## PHPUnit Versions
