@@ -57,7 +57,7 @@ apt-get install -yqq --no-install-recommends nodejs
 npm -g install grunt-cli
 
 printTitle 'Installing MariaDB'
-curl -sSL https://r.mariadb.com/downloads/mariadb_repo_setup | bash -s -- --skip-maxscale --mariadb-server-version=mariadb-10.6
+curl -sSL https://r.mariadb.com/downloads/mariadb_repo_setup | bash -s -- --skip-maxscale --mariadb-server-version=mariadb-10.11
 apt-get install -yqq --no-install-recommends mariadb-server
 
 printTitle 'Installing Nginx'
