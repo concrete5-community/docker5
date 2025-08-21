@@ -70,10 +70,12 @@ chown -R www-data:www-data /var/www/.composer
 curl -sSLf -o /tmp/composer-installer https://getcomposer.org/installer
 php /tmp/composer-installer --install-dir=/usr/local/bin --filename=composer1 --1
 update-alternatives --quiet --install /usr/local/bin/composer composer /usr/local/bin/composer1 10
+php /tmp/composer-installer --install-dir=/usr/local/bin --filename=composer2.2 --2.2
+update-alternatives --quiet --install /usr/local/bin/composer composer /usr/local/bin/composer2.2 20
 php /tmp/composer-installer --install-dir=/usr/local/bin --filename=composer2 --2
-update-alternatives --quiet --install /usr/local/bin/composer composer /usr/local/bin/composer2 20
+update-alternatives --quiet --install /usr/local/bin/composer composer /usr/local/bin/composer2 29
 rm /tmp/composer-installer
-switch-composer 1
+switch-composer 2.2
 (sudo -H -u www-data -- composer clear-cache || true)
 
 printTitle 'Installing PHPUnit'
