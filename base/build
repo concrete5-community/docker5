@@ -3,23 +3,34 @@
 set -o errexit
 set -o nounset
 
-printTitle() {
-    printTitle_length=${#1}
-    printf "\n##%${printTitle_length}s##\n" ' ' | tr ' ' '#'
-    printf '# %s #\n' "$1"
-    printf "##%${printTitle_length}s##\n" ' ' | tr ' ' '#'
+startSection() {
+    if [ "${CI:-}" = true ]; then
+        echo "::group::$1"
+    else
+        startSection_length=${#1}
+        printf "\n##%${startSection_length}s##\n" ' ' | tr ' ' '#'
+        printf '# %s #\n' "$1"
+        printf "##%${startSection_length}s##\n" ' ' | tr ' ' '#'
+    fi
+}
+endSection() {
+    if [ "${CI:-}" = true ]; then
+        echo "::endgroup::"
+    fi
 }
 
-printTitle 'Updating system'
+startSection 'Updating system'
 apt-get update -qy
 apt-get upgrade -qy
 apt-get autoremove --purge -qy
+endSection
 
-printTitle 'Installing apt packages'
+startSection 'Installing apt packages'
 apt-get install -qy --no-install-recommends apt-transport-https ca-certificates curl git gnupg2 patch software-properties-common sudo unzip
 echo 'Set disable_coredump false' >> /etc/sudo.conf
+endSection
 
-printTitle 'Configuring helper commands'
+startSection 'Configuring helper commands'
 chmod 0755 \
     /usr/local/bin/ccm-help \
     /usr/local/bin/ccm-install \
@@ -27,10 +38,11 @@ chmod 0755 \
     /usr/local/bin/switch-php \
     /usr/local/bin/c5 \
     /usr/local/bin/composerpkg \
-    /entrypoint.sh \
+    /entrypoint.sh
+endSection
 
-printTitle 'Installing PHP FPM'
-LC_ALL=C.UTF-8 add-apt-repository ppa:ondrej/php
+startSection 'Installing PHP FPM'
+LC_ALL=C.UTF-8 add-apt-repository -y ppa:ondrej/php
 APT_PACKAGES=''
 for PHP_VERSION in $PHP_VERSIONS; do
     APT_PACKAGES="$APT_PACKAGES php$PHP_VERSION-fpm"
@@ -50,13 +62,15 @@ apt-get install -qy --no-install-recommends $APT_PACKAGES
 unset APT_PACKAGES
 unset PHP_VERSION
 unset PHP_EXTENSION
+endSection
 
-printTitle 'Installing NodeJS'
+startSection 'Installing NodeJS'
 curl -sSL https://deb.nodesource.com/setup_18.x | bash -
 apt-get install -qy --no-install-recommends nodejs
 npm -g install grunt-cli
+endSection
 
-printTitle 'Installing MariaDB'
+startSection 'Installing MariaDB'
 # Broken - see https://jira.mariadb.org/browse/MDEV-37451
 # curl -sSL https://r.mariadb.com/downloads/mariadb_repo_setup | bash -s -- --skip-maxscale --mariadb-server-version=mariadb-10.6
 # Workaround - see https://mariadb.org/download/?t=repo-config&d=22.04+%22jammy%22&v=10.6
@@ -76,12 +90,14 @@ EOT
     apt-get update -qy
 fi
 apt-get install -qy --no-install-recommends mariadb-server
+endSection
 
-printTitle 'Installing Nginx'
-LC_ALL=C.UTF-8 add-apt-repository ppa:ondrej/nginx
+startSection 'Installing Nginx'
+LC_ALL=C.UTF-8 add-apt-repository -y ppa:ondrej/nginx
 apt-get install -qy --no-install-recommends nginx
+endSection
 
-printTitle 'Installing Composer'
+startSection 'Installing Composer'
 mkdir -p /var/www/.composer
 chown -R www-data:www-data /var/www/.composer
 curl -sSLf -o /tmp/composer-installer https://getcomposer.org/installer
@@ -94,8 +110,9 @@ update-alternatives --quiet --install /usr/local/bin/composer composer /usr/loca
 rm /tmp/composer-installer
 switch-composer 2.2
 (sudo -H -u www-data -- composer clear-cache || true)
+endSection
 
-printTitle 'Installing PHPUnit'
+startSection 'Installing PHPUnit'
 for v in $(seq 4 10); do
     echo "- PHPUnit $v"
     curl -sSLf -o /usr/local/bin/phpunit$v https://phar.phpunit.de/phpunit-$v.phar
@@ -103,16 +120,18 @@ for v in $(seq 4 10); do
     update-alternatives --quiet --install /usr/local/bin/phpunit phpunit /usr/local/bin/phpunit$v $v
 done
 switch-phpunit 8
+endSection
 
-printTitle 'Configuring database'
+startSection 'Configuring database'
 sed -i -r 's/^(\s*bind-address\s*=\s*)127\.0\.0\.1(\s*)$/\10.0.0.0\2/' /etc/mysql/my.cnf
 sed -i -r 's/^(\s*innodb_flush_method\s*=\s*)\S.*?(\s*)$/\1fsync\2/' /etc/mysql/my.cnf
 (test -f /etc/mysql/mariadb.conf.d/50-server.cnf && sed -i -r 's/^(\s*bind-address\s*=\s*)127\.0\.0\.1(\s*)$/\10.0.0.0\2/' /etc/mysql/mariadb.conf.d/50-server.cnf || true)
 (test -f /etc/mysql/mariadb.conf.d/50-server.cnf && echo 'innodb_flush_method = fsync' >> /etc/mysql/mariadb.conf.d/50-server.cnf || true)
 ccm-service start db
 echo "CREATE USER 'c5'@'%' IDENTIFIED BY '12345'; CREATE DATABASE c5 COLLATE 'utf8mb4_unicode_ci'; GRANT ALL PRIVILEGES ON c5.* TO 'c5'@'%'; FLUSH PRIVILEGES;" | mysql
+endSection
 
-printTitle 'Final operations'
+startSection 'Final operations'
 apt-get remove -qy --autoremove --purge software-properties-common
 mkdir /app
 chown www-data:www-data /app
@@ -123,5 +142,6 @@ npm cache clean --force
 rm -rf $HOME/.npm/_logs/*.log
 truncate --size=0 /var/log/*.log /var/log/apt/*.log
 rm -rf /var/log/apt/eipp.log.xz
+endSection
 
-printTitle 'Ready.'
+echo 'Ready.'
