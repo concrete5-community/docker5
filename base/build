@@ -11,12 +11,12 @@ printTitle() {
 }
 
 printTitle 'Updating system'
-apt-get update -q
-apt-get upgrade -yq
-apt-get autoremove --purge -yq
+apt-get update -qy
+apt-get upgrade -qy
+apt-get autoremove --purge -qy
 
 printTitle 'Installing apt packages'
-apt-get install -yqq --no-install-recommends apt-transport-https ca-certificates curl git gnupg2 patch software-properties-common sudo unzip
+apt-get install -qy --no-install-recommends apt-transport-https ca-certificates curl git gnupg2 patch software-properties-common sudo unzip
 echo 'Set disable_coredump false' >> /etc/sudo.conf
 
 printTitle 'Configuring helper commands'
@@ -46,23 +46,23 @@ for PHP_VERSION in $PHP_VERSIONS; do
     done
 done
 APT_PACKAGES="$APT_PACKAGES $PHP_EXTENSIONS_COMMON"
-apt-get install -yqq --no-install-recommends $APT_PACKAGES
+apt-get install -qy --no-install-recommends $APT_PACKAGES
 unset APT_PACKAGES
 unset PHP_VERSION
 unset PHP_EXTENSION
 
 printTitle 'Installing NodeJS'
 curl -sSL https://deb.nodesource.com/setup_18.x | bash -
-apt-get install -yqq --no-install-recommends nodejs
+apt-get install -qy --no-install-recommends nodejs
 npm -g install grunt-cli
 
 printTitle 'Installing MariaDB'
 curl -sSL https://r.mariadb.com/downloads/mariadb_repo_setup | bash -s -- --skip-maxscale --mariadb-server-version=mariadb-10.6
-apt-get install -yqq --no-install-recommends mariadb-server
+apt-get install -qy --no-install-recommends mariadb-server
 
 printTitle 'Installing Nginx'
 LC_ALL=C.UTF-8 add-apt-repository ppa:ondrej/nginx
-apt-get install -yqq --no-install-recommends nginx
+apt-get install -qy --no-install-recommends nginx
 
 printTitle 'Installing Composer'
 mkdir -p /var/www/.composer
