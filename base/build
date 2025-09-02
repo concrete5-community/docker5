@@ -57,7 +57,24 @@ apt-get install -qy --no-install-recommends nodejs
 npm -g install grunt-cli
 
 printTitle 'Installing MariaDB'
-curl -sSL https://r.mariadb.com/downloads/mariadb_repo_setup | bash -s -- --skip-maxscale --mariadb-server-version=mariadb-10.6
+# Broken - see https://jira.mariadb.org/browse/MDEV-37451
+# curl -sSL https://r.mariadb.com/downloads/mariadb_repo_setup | bash -s -- --skip-maxscale --mariadb-server-version=mariadb-10.6
+# Workaround - see https://mariadb.org/download/?t=repo-config&d=22.04+%22jammy%22&v=10.6
+mkdir -p /etc/apt/keyrings
+if [ ! -f /etc/apt/keyrings/mariadb-keyring.pgp ]; then
+    curl -sSLf -o /etc/apt/keyrings/mariadb-keyring.pgp https://mariadb.org/mariadb_release_signing_key.pgp
+fi
+if ! [ -f /etc/apt/sources.list.d/mariadb.sources ]; then
+    cat <<'EOT' >/etc/apt/sources.list.d/mariadb.sources
+X-Repolib-Name: MariaDB
+Types: deb
+URIs: https://deb.mariadb.org/10.6/ubuntu
+Suites: jammy
+Components: main main/debug
+Signed-By: /etc/apt/keyrings/mariadb-keyring.pgp
+EOT
+    apt-get update -qy
+fi
 apt-get install -qy --no-install-recommends mariadb-server
 
 printTitle 'Installing Nginx'
