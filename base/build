@@ -26,7 +26,9 @@ apt-get autoremove --purge -qy
 endSection
 
 startSection 'Installing apt packages'
-apt-get install -qy --no-install-recommends apt-transport-https ca-certificates curl git gnupg2 patch software-properties-common sudo unzip
+echo 'tzdata tzdata/Areas select Etc' | debconf-set-selections
+echo 'tzdata tzdata/Zones/Etc select UTC' | debconf-set-selections
+apt-get install -qy --no-install-recommends apt-transport-https ca-certificates curl git gnupg2 patch software-properties-common sudo tzdata unzip
 echo 'Set disable_coredump false' >> /etc/sudo.conf
 endSection
 
