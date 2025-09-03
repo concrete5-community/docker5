@@ -48,22 +48,26 @@ LC_ALL=C.UTF-8 add-apt-repository -y ppa:ondrej/php
 APT_PACKAGES=''
 for PHP_VERSION in $PHP_VERSIONS; do
     APT_PACKAGES="$APT_PACKAGES php$PHP_VERSION-fpm"
-    for PHP_EXTENSION in $PHP_EXTENSIONS_VSPECIFIC; do
-        APT_PACKAGE="php$PHP_VERSION-$PHP_EXTENSION"
-        case $APT_PACKAGE in
-            php8.*-json)
-                ;;
-            *)
-                APT_PACKAGES="$APT_PACKAGES $APT_PACKAGE"
-                ;;
-        esac
-    done
+    if [ -n "${PHP_EXTENSIONS_VSPECIFIC:-}" ]; then
+        for PHP_EXTENSION in $PHP_EXTENSIONS_VSPECIFIC; do
+            APT_PACKAGE="php$PHP_VERSION-$PHP_EXTENSION"
+            case $APT_PACKAGE in
+                php8.*-json)
+                    ;;
+                *)
+                    APT_PACKAGES="$APT_PACKAGES $APT_PACKAGE"
+                    ;;
+            esac
+        done
+        unset PHP_EXTENSION
+    fi
 done
-APT_PACKAGES="$APT_PACKAGES $PHP_EXTENSIONS_COMMON"
+unset PHP_VERSION
+if [ -n "${PHP_EXTENSIONS_COMMON:-}" ]; then
+    APT_PACKAGES="$APT_PACKAGES $PHP_EXTENSIONS_COMMON"
+fi
 apt-get install -qy --no-install-recommends $APT_PACKAGES
 unset APT_PACKAGES
-unset PHP_VERSION
-unset PHP_EXTENSION
 endSection
 
 startSection 'Installing NodeJS'
