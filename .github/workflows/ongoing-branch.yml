@@ -58,6 +58,7 @@ jobs:
         if: steps.check.outputs.BUILD_SHA1
         run: |
           docker build \
+              --build-arg CI=true \
               --build-arg CCM_PHP_VERSION=${{ matrix.data.php_version }} \
               --build-arg CCM_COMPOSER_VERSION=${{ matrix.data.composer_version }} \
               --build-arg CCM_PHPUNIT_VERSION=${{ matrix.data.phpunit_version }} \

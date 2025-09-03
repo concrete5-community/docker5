@@ -2,6 +2,8 @@ FROM ubuntu:22.04
 
 ENV C5_SUDOAS=www-data
 
+ARG CI=
+
 ARG DEBIAN_FRONTEND=noninteractive
 
 ARG PHP_VERSIONS="5.6 7.4 8.1 8.2"

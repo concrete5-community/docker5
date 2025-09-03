@@ -102,6 +102,7 @@ jobs:
         run: |
           docker build \
             --force-rm --rm \
+            --build-arg CI=true \
             --tag ghcr.io/concrete5-community/docker5:base \
             ./base \
             2>&1 \
@@ -182,6 +183,7 @@ jobs:
         name: Build with starting point ${{ matrix.data.c5_startingpoint }}
         run: |
           docker build \
+            --build-arg CI=true \
             --build-arg CCM_PHP_VERSION=${{ matrix.data.php_version }} \
             --build-arg CCM_COMPOSER_VERSION=${{ matrix.data.composer_version }} \
             --build-arg CCM_PHPUNIT_VERSION=${{ matrix.data.phpunit_version }} \
