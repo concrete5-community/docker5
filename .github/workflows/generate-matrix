@@ -154,8 +154,10 @@ readonly class Version
 
         if (version_compare($this->majorVersion, '9') >= 0) {
             $this->composerVersion = '2';
-        } else {
+        } elseif ($this->isDevVersion) {
             $this->composerVersion = '1';
+        } else {
+            $this->composerVersion = '2.2';
         }
 
         if (str_ends_with($this->version, DEV_VERSIONS_SUFFIX)) {
