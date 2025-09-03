@@ -649,7 +649,7 @@
     },
     {
         "php_version": "7.4",
-        "composer_version": "1",
+        "composer_version": "2.2",
         "phpunit_version": "4",
         "c5_archive": "https://www.concretecms.org/download_file/cdc12556-d0cc-4ca4-85cc-b1e76b6a4401/2718",
         "c5_startingpoint": "elemental_blank",
@@ -659,7 +659,7 @@
     },
     {
         "php_version": "7.4",
-        "composer_version": "1",
+        "composer_version": "2.2",
         "phpunit_version": "4",
         "c5_archive": "https://www.concretecms.org/download_file/cdc12556-d0cc-4ca4-85cc-b1e76b6a4401/2718",
         "c5_startingpoint": "elemental_full",
@@ -669,7 +669,7 @@
     },
     {
         "php_version": "7.4",
-        "composer_version": "1",
+        "composer_version": "2.2",
         "phpunit_version": "4",
         "c5_archive": "https://www.concretecms.org/download_file/8b11b79e-fb1f-4b14-9ec6-07bedd6fab88/2718",
         "c5_startingpoint": "elemental_blank",
@@ -679,7 +679,7 @@
     },
     {
         "php_version": "7.4",
-        "composer_version": "1",
+        "composer_version": "2.2",
         "phpunit_version": "4",
         "c5_archive": "https://www.concretecms.org/download_file/8b11b79e-fb1f-4b14-9ec6-07bedd6fab88/2718",
         "c5_startingpoint": "elemental_full",
@@ -689,7 +689,7 @@
     },
     {
         "php_version": "7.4",
-        "composer_version": "1",
+        "composer_version": "2.2",
         "phpunit_version": "4",
         "c5_archive": "https://www.concretecms.org/download_file/be718994-c2a0-4c11-aa15-49b1fd70da39/2718",
         "c5_startingpoint": "elemental_blank",
@@ -699,7 +699,7 @@
     },
     {
         "php_version": "7.4",
-        "composer_version": "1",
+        "composer_version": "2.2",
         "phpunit_version": "4",
         "c5_archive": "https://www.concretecms.org/download_file/be718994-c2a0-4c11-aa15-49b1fd70da39/2718",
         "c5_startingpoint": "elemental_full",
@@ -709,7 +709,7 @@
     },
     {
         "php_version": "7.4",
-        "composer_version": "1",
+        "composer_version": "2.2",
         "phpunit_version": "4",
         "c5_archive": "https://www.concretecms.org/download_file/5c79ee9f-349f-4460-9841-0495656785c8/2718",
         "c5_startingpoint": "elemental_blank",
@@ -719,7 +719,7 @@
     },
     {
         "php_version": "7.4",
-        "composer_version": "1",
+        "composer_version": "2.2",
         "phpunit_version": "4",
         "c5_archive": "https://www.concretecms.org/download_file/5c79ee9f-349f-4460-9841-0495656785c8/2718",
         "c5_startingpoint": "elemental_full",
@@ -729,7 +729,7 @@
     },
     {
         "php_version": "7.4",
-        "composer_version": "1",
+        "composer_version": "2.2",
         "phpunit_version": "4",
         "c5_archive": "https://www.concretecms.org/download_file/a7bfc016-9d13-4468-bf91-8605b957a644/2718",
         "c5_startingpoint": "elemental_blank",
@@ -739,7 +739,7 @@
     },
     {
         "php_version": "7.4",
-        "composer_version": "1",
+        "composer_version": "2.2",
         "phpunit_version": "4",
         "c5_archive": "https://www.concretecms.org/download_file/a7bfc016-9d13-4468-bf91-8605b957a644/2718",
         "c5_startingpoint": "elemental_full",
@@ -749,7 +749,7 @@
     },
     {
         "php_version": "7.4",
-        "composer_version": "1",
+        "composer_version": "2.2",
         "phpunit_version": "4",
         "c5_archive": "https://www.concretecms.org/download_file/d8e4d0d6-cea1-4778-8bfb-4fa0b3fb31c0/2718",
         "c5_startingpoint": "elemental_blank",
@@ -759,7 +759,7 @@
     },
     {
         "php_version": "7.4",
-        "composer_version": "1",
+        "composer_version": "2.2",
         "phpunit_version": "4",
         "c5_archive": "https://www.concretecms.org/download_file/d8e4d0d6-cea1-4778-8bfb-4fa0b3fb31c0/2718",
         "c5_startingpoint": "elemental_full",
@@ -769,7 +769,7 @@
     },
     {
         "php_version": "7.4",
-        "composer_version": "1",
+        "composer_version": "2.2",
         "phpunit_version": "4",
         "c5_archive": "https://www.concretecms.org/download_file/75ae96a5-44f9-486f-b6b9-d0af605020f6/2718",
         "c5_startingpoint": "elemental_blank",
@@ -779,7 +779,7 @@
     },
     {
         "php_version": "7.4",
-        "composer_version": "1",
+        "composer_version": "2.2",
         "phpunit_version": "4",
         "c5_archive": "https://www.concretecms.org/download_file/75ae96a5-44f9-486f-b6b9-d0af605020f6/2718",
         "c5_startingpoint": "elemental_full",
@@ -789,7 +789,7 @@
     },
     {
         "php_version": "7.4",
-        "composer_version": "1",
+        "composer_version": "2.2",
         "phpunit_version": "4",
         "c5_archive": "https://www.concretecms.org/download_file/a7572f6c-7390-4252-a04d-76c209f377b0/2718",
         "c5_startingpoint": "elemental_blank",
@@ -799,7 +799,7 @@
     },
     {
         "php_version": "7.4",
-        "composer_version": "1",
+        "composer_version": "2.2",
         "phpunit_version": "4",
         "c5_archive": "https://www.concretecms.org/download_file/a7572f6c-7390-4252-a04d-76c209f377b0/2718",
         "c5_startingpoint": "elemental_full",
@@ -809,7 +809,7 @@
     },
     {
         "php_version": "7.4",
-        "composer_version": "1",
+        "composer_version": "2.2",
         "phpunit_version": "4",
         "c5_archive": "https://www.concretecms.org/download_file/5339037b-bd89-42e8-867a-2d30d7f5fa6d/2718",
         "c5_startingpoint": "elemental_blank",
@@ -819,7 +819,7 @@
     },
     {
         "php_version": "7.4",
-        "composer_version": "1",
+        "composer_version": "2.2",
         "phpunit_version": "4",
         "c5_archive": "https://www.concretecms.org/download_file/5339037b-bd89-42e8-867a-2d30d7f5fa6d/2718",
         "c5_startingpoint": "elemental_full",
@@ -829,7 +829,7 @@
     },
     {
         "php_version": "7.4",
-        "composer_version": "1",
+        "composer_version": "2.2",
         "phpunit_version": "4",
         "c5_archive": "https://www.concretecms.org/download_file/2bba0898-1539-48ff-b273-0cbddc7588da/2718",
         "c5_startingpoint": "elemental_blank",
@@ -839,7 +839,7 @@
     },
     {
         "php_version": "7.4",
-        "composer_version": "1",
+        "composer_version": "2.2",
         "phpunit_version": "4",
         "c5_archive": "https://www.concretecms.org/download_file/2bba0898-1539-48ff-b273-0cbddc7588da/2718",
         "c5_startingpoint": "elemental_full",
@@ -849,7 +849,7 @@
     },
     {
         "php_version": "7.4",
-        "composer_version": "1",
+        "composer_version": "2.2",
         "phpunit_version": "4",
         "c5_archive": "https://www.concretecms.org/download_file/ae9cca19-d76c-458e-a63a-ce9b7b963e1d/2718",
         "c5_startingpoint": "elemental_blank",
@@ -859,7 +859,7 @@
     },
     {
         "php_version": "7.4",
-        "composer_version": "1",
+        "composer_version": "2.2",
         "phpunit_version": "4",
         "c5_archive": "https://www.concretecms.org/download_file/ae9cca19-d76c-458e-a63a-ce9b7b963e1d/2718",
         "c5_startingpoint": "elemental_full",
@@ -869,7 +869,7 @@
     },
     {
         "php_version": "7.4",
-        "composer_version": "1",
+        "composer_version": "2.2",
         "phpunit_version": "4",
         "c5_archive": "https://www.concretecms.org/download_file/61dab82f-fb01-47bc-8cf1-deffff890224/2718",
         "c5_startingpoint": "elemental_blank",
@@ -879,7 +879,7 @@
     },
     {
         "php_version": "7.4",
-        "composer_version": "1",
+        "composer_version": "2.2",
         "phpunit_version": "4",
         "c5_archive": "https://www.concretecms.org/download_file/61dab82f-fb01-47bc-8cf1-deffff890224/2718",
         "c5_startingpoint": "elemental_full",
@@ -889,7 +889,7 @@
     },
     {
         "php_version": "7.4",
-        "composer_version": "1",
+        "composer_version": "2.2",
         "phpunit_version": "4",
         "c5_archive": "https://www.concretecms.org/download_file/3abec4a4-1a45-489c-9fe7-bb3f100dea99/2718",
         "c5_startingpoint": "elemental_blank",
@@ -899,7 +899,7 @@
     },
     {
         "php_version": "7.4",
-        "composer_version": "1",
+        "composer_version": "2.2",
         "phpunit_version": "4",
         "c5_archive": "https://www.concretecms.org/download_file/3abec4a4-1a45-489c-9fe7-bb3f100dea99/2718",
         "c5_startingpoint": "elemental_full",
@@ -909,7 +909,7 @@
     },
     {
         "php_version": "7.4",
-        "composer_version": "1",
+        "composer_version": "2.2",
         "phpunit_version": "4",
         "c5_archive": "https://www.concretecms.org/download_file/1cf0528b-3e20-48ac-9250-b9f08be4d3aa/2718",
         "c5_startingpoint": "elemental_blank",
@@ -919,7 +919,7 @@
     },
     {
         "php_version": "7.4",
-        "composer_version": "1",
+        "composer_version": "2.2",
         "phpunit_version": "4",
         "c5_archive": "https://www.concretecms.org/download_file/1cf0528b-3e20-48ac-9250-b9f08be4d3aa/2718",
         "c5_startingpoint": "elemental_full",
@@ -929,7 +929,7 @@
     },
     {
         "php_version": "7.4",
-        "composer_version": "1",
+        "composer_version": "2.2",
         "phpunit_version": "4",
         "c5_archive": "https://www.concretecms.org/download_file/7dd0a8d7-569d-4b9e-9093-1604b80794d7/2718",
         "c5_startingpoint": "elemental_blank",
@@ -939,7 +939,7 @@
     },
     {
         "php_version": "7.4",
-        "composer_version": "1",
+        "composer_version": "2.2",
         "phpunit_version": "4",
         "c5_archive": "https://www.concretecms.org/download_file/7dd0a8d7-569d-4b9e-9093-1604b80794d7/2718",
         "c5_startingpoint": "elemental_full",
@@ -949,7 +949,7 @@
     },
     {
         "php_version": "5.6",
-        "composer_version": "1",
+        "composer_version": "2.2",
         "phpunit_version": "4",
         "c5_archive": "https://marketplace.concretecms.com/files/4914/8193/0463/concrete5.7.5.13.zip",
         "c5_startingpoint": "elemental_blank",
@@ -959,7 +959,7 @@
     },
     {
         "php_version": "5.6",
-        "composer_version": "1",
+        "composer_version": "2.2",
         "phpunit_version": "4",
         "c5_archive": "https://marketplace.concretecms.com/files/4914/8193/0463/concrete5.7.5.13.zip",
         "c5_startingpoint": "elemental_full",
