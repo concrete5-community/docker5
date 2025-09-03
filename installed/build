@@ -3,21 +3,31 @@
 set -o errexit
 set -o nounset
 
-printTitle() {
-    printTitle_length=${#1}
-    printf "\n##%${printTitle_length}s##\n" ' ' | tr ' ' '#'
-    printf '# %s #\n' "$1"
-    printf "##%${printTitle_length}s##\n" ' ' | tr ' ' '#'
+startSection() {
+    if [ "${CI:-}" = true ]; then
+        echo "::group::$1"
+    else
+        startSection_length=${#1}
+        printf "\n##%${startSection_length}s##\n" ' ' | tr ' ' '#'
+        printf '# %s #\n' "$1"
+        printf "##%${startSection_length}s##\n" ' ' | tr ' ' '#'
+    fi
+}
+endSection() {
+    if [ "${CI:-}" = true ]; then
+        echo "::endgroup::"
+    fi
 }
 
-printTitle 'Configuring environment'
+startSection 'Configuring environment'
 printf '(PHP version: %s, Composer version: %s)\n' "$CCM_PHP_VERSION" "$CCM_COMPOSER_VERSION"
 switch-php "$CCM_PHP_VERSION"
 switch-composer "$CCM_COMPOSER_VERSION"
 cd /app
 ccm-service start db
+endSection
 
-printTitle 'Downloading and extracting ConcreteCMS'
+startSection 'Downloading and extracting ConcreteCMS'
 printf '(URL: %s)\n' "$CCM_C5_ARCHIVE"
 if test "$CCM_C5_ARCHIVE" != "${CCM_C5_ARCHIVE#https://github.com/}" || test "$CCM_C5_ARCHIVE" != "${CCM_C5_ARCHIVE#https://codeload.github.com/}"; then
     curl -sSL "$CCM_C5_ARCHIVE" | sudo -u www-data -- tar xz --strip 1
@@ -29,9 +39,10 @@ else
     rm -rf /tmp/c5.zip /tmp/c5
     chmod +x concrete/bin/concrete5
 fi
+endSection
 
 if ! test -d concrete/vendor; then
-    printTitle 'Installing composer dependencies'
+    startSection 'Installing composer dependencies'
     if test -f concrete/composer.json; then
         sed -i 's/"hautelook\/phpass"/"ozh\/phpass"/' concrete/composer.json
     fi
@@ -39,24 +50,27 @@ if ! test -d concrete/vendor; then
         sed -i 's_\bhautelook/phpass\b_ozh/phpass_' composer.lock
     fi
     sudo -H -u www-data -- composer install --optimize-autoloader --no-cache
+    endSection
 fi
 
 if [ "${CCM_PATCH_ENVIRONMENT_ONLY:-}" = Y ]; then
-    printTitle 'Patching Concrete for C5_ENVIRONMENT_ONLY support'
+    startSection 'Patching Concrete for C5_ENVIRONMENT_ONLY support'
     sed -Ei 's/^return \$app;//' /app/application/bootstrap/start.php
     cat /tmp/start-patch >>/app/application/bootstrap/start.php
     cat /tmp/app-patch >>/app/application/bootstrap/app.php
+    endSection
 fi
 rm -f /tmp/start-patch /tmp/app-patch
 
-printTitle 'Configuring PHPUnit'
+startSection 'Configuring PHPUnit'
 printf '(PHPUnit version: %s)\n' "$CCM_PHPUNIT_VERSION"
 if [ -f /app/concrete/vendor/phpunit/phpunit/phpunit ]; then
     update-alternatives --quiet --install /usr/local/bin/phpunit phpunit /app/concrete/vendor/phpunit/phpunit/phpunit 9999
 fi
 switch-phpunit "$CCM_PHPUNIT_VERSION"
+endSection
 
-printTitle 'Installing Concrete'
+startSection 'Installing Concrete'
 c5 c5:install \
     --db-server=localhost \
     --db-username=c5 \
@@ -65,17 +79,20 @@ c5 c5:install \
     --site='ConcreteCMS website' \
     --starting-point=$CCM_STARTING_POINT \
     --admin-email=admin@example.org \
-    --admin-password=12345 \
+    --admin-password=12345
+endSection
 
+startSection 'Confguring Concrete'
 sudo -u www-data -- mkdir --mode=0755 -p /app/application/languages/site
-
 c5 c5:config set -g concrete.seo.url_rewriting true
 c5 c5:config set -g concrete.mail.method smtp
 c5 c5:config set -g concrete.mail.methods.smtp.server 127.0.0.1
 c5 c5:config set -g concrete.mail.methods.smtp.port 25
+endSection
 
-printTitle 'Final operations'
+startSection 'Final operations'
 c5 c5:clear-cache
 ccm-service stop db
+endSection
 
-printTitle 'Ready.'
+echo 'Ready.'

@@ -1,5 +1,7 @@
 FROM ghcr.io/concrete5-community/docker5:base
 
+ARG CI=
+
 ARG CCM_PHP_VERSION=8.1
 ARG CCM_COMPOSER_VERSION=2
 ARG CCM_PHPUNIT_VERSION=8
