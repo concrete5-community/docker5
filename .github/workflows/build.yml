@@ -201,13 +201,21 @@ jobs:
         name: Check that MariaDB works
         run: docker run --rm --entrypoint='' ghcr.io/concrete5-community/docker5:${{ matrix.data.image_tag }} ccm-service start db
       -
-        name: Install Blocks Cloner
+        name: Test installing composerpkg
+        if: needs.check_envoronment.outputs.action == 'build' && matrix.data.image_tag == '9.4.1'
+        run: docker run --rm --entrypoint='' ghcr.io/concrete5-community/docker5:${{ matrix.data.image_tag }} ccm-install composerpkg
+      -
+        name: Test installing Blocks Cloner
         if: needs.check_envoronment.outputs.action == 'build' && matrix.data.image_tag == '9.4.1'
         run: docker run --rm --entrypoint='' ghcr.io/concrete5-community/docker5:${{ matrix.data.image_tag }} ccm-install blocks_cloner
       -
-        name: Install concrete-cif
+        name: Test installing concrete-cif
         if: needs.check_envoronment.outputs.action == 'build' && matrix.data.image_tag == '9.4.1'
         run: docker run --rm --entrypoint='' ghcr.io/concrete5-community/docker5:${{ matrix.data.image_tag }} ccm-install concrete-cif
+      -
+        name: Test installing PHP CS Fixer
+        if: needs.check_envoronment.outputs.action == 'build' && matrix.data.image_tag == '9.4.1'
+        run: docker run --rm --entrypoint='' ghcr.io/concrete5-community/docker5:${{ matrix.data.image_tag }} ccm-install php-cs-fixer
       -
         name: Remove base Docker image
         if: needs.check_envoronment.outputs.action == 'publish'
