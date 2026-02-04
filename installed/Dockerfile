@@ -11,6 +11,7 @@ ARG CCM_PATCH_ENVIRONMENT_ONLY=N
 
 COPY assets/app-patch /tmp/
 COPY assets/start-patch /tmp/
+COPY assets/php-cs-fixer.config.php /tmp
 COPY build /
 
 RUN /build && rm /build
