@@ -34,12 +34,7 @@ endSection
 
 startSection 'Configuring helper commands'
 chmod 0755 \
-    /usr/local/bin/ccm-help \
-    /usr/local/bin/ccm-install \
-    /usr/local/bin/ccm-service \
-    /usr/local/bin/switch-php \
     /usr/local/bin/c5 \
-    /usr/local/bin/composerpkg \
     /entrypoint.sh
 endSection
 

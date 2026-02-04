@@ -161,6 +161,14 @@ You can get a list of them by running the `ccm-help` CLI command.
 
 You can install additional components with the `ccm-install` CLI command.
 
+### composerpkg
+
+You can install [composerpkg](https://github.com/concrete5-community/cli?tab=readme-ov-file#composer-wrapper-for-package-dependencies) with:
+
+```sh
+ccm-install composerpkg
+```
+
 ### Blocks Cloner
 
 You can install [Blocks Cloner](https://github.com/concrete5-community/blocks_cloner) in a concrete5/ConcreteCMS version 8.5.4 or later come with:
@@ -175,6 +183,14 @@ You can install [concrete-cif](https://github.com/concretecms/concrete-cif) with
 
 ```sh
 ccm-install concrete-cif
+```
+
+### PHP CS Fixer
+
+You can install [PHP CS Fixer](https://cs.symfony.com/) with:
+
+```sh
+ccm-install php-cs-fixer
 ```
 
 ## PHP Versions
