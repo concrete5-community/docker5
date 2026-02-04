@@ -1,0 +1,7 @@
+#!/bin/sh
+
+set -o nounset
+set -o errexit
+
+ccm-install concrete-cif >&2
+concrete-cif "$@"

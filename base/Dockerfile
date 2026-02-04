@@ -10,18 +10,23 @@ ARG PHP_VERSIONS="5.6 7.4 8.1 8.2"
 ARG PHP_EXTENSIONS_VSPECIFIC="bcmath bz2 curl exif ftp gd gmp imagick imap intl json ldap mbstring mysql opcache pdo redis soap ssh2 xml xsl zip"
 ARG PHP_EXTENSIONS_COMMON=""
 
-COPY assets/ccm-help /usr/local/bin/
-COPY assets/ccm-install /usr/local/bin/
-COPY assets/ccm-service /usr/local/bin/
-COPY assets/switch-php /usr/local/bin/
-COPY assets/switch-composer /usr/local/bin/
-COPY assets/switch-phpunit /usr/local/bin/
+COPY --chmod=+x \
+    assets/ccm-help \
+    assets/ccm-install \
+    assets/ccm-service \
+    assets/composerpkg \
+    assets/concrete-cif \
+    assets/php-cs-fixer \
+    assets/switch-composer \
+    assets/switch-php \
+    assets/switch-phpunit \
+    /usr/local/bin/
+
 COPY assets/entrypoint.sh /
 COPY assets/bashrc /root/.bashrc
 COPY build /
 
 ADD https://raw.githubusercontent.com/concrete5-community/cli/master/c5 /usr/local/bin/
-ADD https://raw.githubusercontent.com/concrete5-community/cli/master/composerpkg /usr/local/bin/
 
 EXPOSE 80
 EXPOSE 3306
