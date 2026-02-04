@@ -124,6 +124,8 @@ You can also try the latest development versions, built directly from the offici
 <!-- START OF DEVELOPMENT VERSIONS TABLE -->
 | Branch | Starting Point | Default PHP Version | Image |
 |:---:|---|:---:|---|
+| [9.5.x](https://github.com/concretecms/concretecms/tree/9.5.x) | atomik_blank | 8.2 | `ghcr.io/concrete5-community/docker5:9.5.x` |
+| [9.5.x](https://github.com/concretecms/concretecms/tree/9.5.x) | atomik_full | 8.2 | `ghcr.io/concrete5-community/docker5:9.5.x-full` |
 | [9.4.x](https://github.com/concretecms/concretecms/tree/9.4.x) | atomik_blank | 8.2 | `ghcr.io/concrete5-community/docker5:9.4.x` |
 | [9.4.x](https://github.com/concretecms/concretecms/tree/9.4.x) | atomik_full | 8.2 | `ghcr.io/concrete5-community/docker5:9.4.x-full` |
 | [9.3.x](https://github.com/concretecms/concretecms/tree/9.3.x) | atomik_blank | 8.2 | `ghcr.io/concrete5-community/docker5:9.3.x` |
