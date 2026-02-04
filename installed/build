@@ -84,10 +84,23 @@ endSection
 
 startSection 'Confguring Concrete'
 sudo -u www-data -- mkdir --mode=0755 -p /app/application/languages/site
+echo 'application/languages/site created.'
 c5 c5:config set -g concrete.seo.url_rewriting true
+echo 'URL rewriting enabled.'
 c5 c5:config set -g concrete.mail.method smtp
 c5 c5:config set -g concrete.mail.methods.smtp.server 127.0.0.1
 c5 c5:config set -g concrete.mail.methods.smtp.port 25
+echo 'SMTP mail configured.'
+if [ -f /app/.php-cs-fixer.dist.php ]; then
+    echo 'php-cs-fixer configuration not installed because it already exists.'
+elif [ -f /app/concrete/src/Support/CodingStyle/autoload.php ]; then
+    cp /tmp/php-cs-fixer.config.php /app/.php-cs-fixer.dist.php
+    chown www-data:www-data /app/.php-cs-fixer.dist.php
+    echo 'php-cs-fixer configuration installed.'
+else
+    echo 'php-cs-fixer configuration not installed because not supported.'
+fi
+rm -f /tmp/php-cs-fixer.config.php
 endSection
 
 startSection 'Final operations'
