@@ -50,5 +50,6 @@
     "9.4.5": "https://www.concretecms.org/download_file/7da4cc9c-0633-4edf-b97b-7ad3e3ab276a/2718",
     "9.4.6": "https://www.concretecms.org/download_file/87a0c93c-5243-4b21-9a9d-f340eaf139d5/2718",
     "9.4.7": "https://www.concretecms.org/download_file/8bbe8ad7-1b48-4f2e-9d7e-fcc9258385e7/2718",
-    "9.4.x": "https://github.com/concretecms/concretecms/archive/9.4.x.tar.gz"
+    "9.4.x": "https://github.com/concretecms/concretecms/archive/9.4.x.tar.gz",
+    "9.5.x": "https://github.com/concretecms/concretecms/archive/9.5.x.tar.gz"
 }
