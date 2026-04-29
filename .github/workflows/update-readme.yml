@@ -80,7 +80,7 @@ jobs:
       -
         name: Checkout
         if: steps.inspect-environment.outputs.action != 'none'
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
       -
         name: Update README
         if: steps.inspect-environment.outputs.action != 'none'
