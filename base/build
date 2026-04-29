@@ -94,7 +94,6 @@ apt-get install -qy --no-install-recommends mariadb-server
 endSection
 
 startSection 'Installing Nginx'
-LC_ALL=C.UTF-8 add-apt-repository -y ppa:ondrej/nginx
 apt-get install -qy --no-install-recommends nginx
 endSection
 
