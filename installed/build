@@ -3,7 +3,7 @@
 set -o errexit
 set -o nounset
 
-downloadRetries=3
+downloadRetries=10
 downloadSleepFactor=20
 
 startSection() {
