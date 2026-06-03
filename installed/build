@@ -3,8 +3,8 @@
 set -o errexit
 set -o nounset
 
-downloadRetries=6
-downloadSleepFactor=4
+downloadRetries=3
+downloadSleepFactor=20
 
 startSection() {
     if [ "${CI:-}" = true ]; then
