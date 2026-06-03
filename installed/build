@@ -32,7 +32,7 @@ downloadZip() {
             return 0
         fi
         rm -f "$downloadZip_tempFile"
-        if [ $downloadZip_attempt -ge 3 ]; then
+        if [ $downloadZip_attempt -ge 5 ]; then
             echo "Download failed after $downloadZip_attempt attempts" >&2
             return 1
         fi
@@ -55,7 +55,7 @@ downloadTGZ() {
             return 0
         fi
         rm -f "$downloadTGZ_tempFile"
-        if [ $downloadTGZ_attempt -ge 3 ]; then
+        if [ $downloadTGZ_attempt -ge 5 ]; then
             echo "Download failed after $downloadTGZ_attempt attempts" >&2
             return 1
         fi
