@@ -19,6 +19,52 @@ endSection() {
     fi
 }
 
+downloadZip() {
+    downloadZip_attempt=1
+    while true; do
+        downloadZip_tempFile=$(mktemp) || return 1
+        if ! curl -sSLf -o "$downloadZip_tempFile" "$1"; then
+            echo "Download attempt $downloadZip_attempt failed" >&2
+        elif ! unzip -tq "$downloadZip_tempFile" >/dev/null 2>&1; then
+            echo "ZIP validation attempt $downloadZip_attempt failed" >&2
+        else
+            printf '%s\n' "$downloadZip_tempFile"
+            return 0
+        fi
+        rm -f "$downloadZip_tempFile"
+        if [ $downloadZip_attempt -ge 3 ]; then
+            echo "Download failed after $downloadZip_attempt attempts" >&2
+            return 1
+        fi
+        printf "Sleeping for %s seconds and retrying...\n" "$downloadZip_attempt" >&2
+        sleep $downloadZip_attempt
+        downloadZip_attempt=$((downloadZip_attempt + 1))
+    done
+}
+
+downloadTGZ() {
+    downloadTGZ_attempt=1
+    while true; do
+        downloadTGZ_tempFile=$(mktemp) || return 1
+        if ! curl -sSLf -o "$downloadTGZ_tempFile" "$1"; then
+            echo "Download attempt $downloadTGZ_attempt failed" >&2
+        elif ! tar -tzf "$downloadTGZ_tempFile" >/dev/null 2>&1; then
+            echo "TGZ validation attempt $downloadTGZ_attempt failed" >&2
+        else
+            printf '%s\n' "$downloadTGZ_tempFile"
+            return 0
+        fi
+        rm -f "$downloadTGZ_tempFile"
+        if [ $downloadTGZ_attempt -ge 3 ]; then
+            echo "Download failed after $downloadTGZ_attempt attempts" >&2
+            return 1
+        fi
+        printf "Sleeping for %s seconds and retrying...\n" "$downloadTGZ_attempt" >&2
+        sleep $downloadTGZ_attempt
+        downloadTGZ_attempt=$((downloadTGZ_attempt + 1))
+    done
+}
+
 startSection 'Configuring environment'
 printf '(PHP version: %s, Composer version: %s)\n' "$CCM_PHP_VERSION" "$CCM_COMPOSER_VERSION"
 switch-php "$CCM_PHP_VERSION"
@@ -30,13 +76,23 @@ endSection
 startSection 'Downloading and extracting ConcreteCMS'
 printf '(URL: %s)\n' "$CCM_C5_ARCHIVE"
 if test "$CCM_C5_ARCHIVE" != "${CCM_C5_ARCHIVE#https://github.com/}" || test "$CCM_C5_ARCHIVE" != "${CCM_C5_ARCHIVE#https://codeload.github.com/}"; then
-    curl -sSL "$CCM_C5_ARCHIVE" | sudo -u www-data -- tar xz --strip 1
+    if ! tgzFile=$(downloadTGZ "$CCM_C5_ARCHIVE"); then
+        echo "Failed to download and validate TGZ file from $CCM_C5_ARCHIVE" >&2
+        exit 1
+    fi
+    chmod 0644 "$tgzFile"
+    sudo -u www-data -- tar xzf "$tgzFile" --strip 1
+    rm -f "$tgzFile"
 else
-    curl -sSL -o /tmp/c5.zip "$CCM_C5_ARCHIVE"
+    if ! zipFile=$(downloadZip "$CCM_C5_ARCHIVE"); then
+        echo "Failed to download and validate ZIP file from $CCM_C5_ARCHIVE" >&2
+        exit 1
+    fi
+    chmod 0644 "$zipFile"
     sudo -u www-data -- mkdir /tmp/c5
-    sudo -u www-data -- unzip -q /tmp/c5.zip -d /tmp/c5
+    sudo -u www-data -- unzip -q "$zipFile" -d /tmp/c5
     mv /tmp/c5/*/** /app
-    rm -rf /tmp/c5.zip /tmp/c5
+    rm -rf "$zipFile" /tmp/c5
     chmod +x concrete/bin/concrete5
 fi
 endSection
