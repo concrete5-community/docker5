@@ -42,21 +42,34 @@ startSection 'Installing PHP FPM'
 LC_ALL=C.UTF-8 add-apt-repository -y ppa:ondrej/php
 APT_PACKAGES=''
 for PHP_VERSION in $PHP_VERSIONS; do
+    PHP_VERSION_ID=$(( ${PHP_VERSION%%.*} * 100 + ${PHP_VERSION#*.} ))
     APT_PACKAGES="$APT_PACKAGES php$PHP_VERSION-fpm"
     if [ -n "${PHP_EXTENSIONS_VSPECIFIC:-}" ]; then
         for PHP_EXTENSION in $PHP_EXTENSIONS_VSPECIFIC; do
             APT_PACKAGE="php$PHP_VERSION-$PHP_EXTENSION"
-            case $APT_PACKAGE in
-                php8.*-json)
+            case "$PHP_EXTENSION" in
+                json)
+                    if [ $PHP_VERSION_ID -ge 800 ]; then
+                        # Since PHP 8.0, the JSON extension is bundled and cannot be installed separately
+                        APT_PACKAGE=
+                    fi
                     ;;
-                *)
-                    APT_PACKAGES="$APT_PACKAGES $APT_PACKAGE"
+                opcache)
+                    if [ $PHP_VERSION_ID -ge 805 ]; then
+                        # Since PHP 8.5, the OPcache extension is bundled and cannot be installed separately
+                        APT_PACKAGE=
+                    fi
                     ;;
             esac
+            if [ -n "$APT_PACKAGE" ]; then
+                APT_PACKAGES="$APT_PACKAGES $APT_PACKAGE"
+            fi
+            unset APT_PACKAGE
         done
         unset PHP_EXTENSION
     fi
 done
+unset PHP_VERSION_ID
 unset PHP_VERSION
 if [ -n "${PHP_EXTENSIONS_COMMON:-}" ]; then
     APT_PACKAGES="$APT_PACKAGES $PHP_EXTENSIONS_COMMON"
