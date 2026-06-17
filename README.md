@@ -203,7 +203,7 @@ ccm-install php-cs-fixer
 
 ## PHP Versions
 
-Every docker image contains multiple PHP versions: 5.6, 7.4, 8.1, and 8.2.
+Every docker image contains multiple PHP versions: 5.6, 7.4, 8.1, 8.2, 8.3, 8.4 and 8.5.
 
 When using the default entry point you can override the default one by specifying the `CCM_PHP_VERSION` environment variable, like this:
 
