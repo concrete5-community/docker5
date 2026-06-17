@@ -100,6 +100,7 @@ jobs:
       -
         name: Build
         run: |
+          set -o pipefail
           docker build \
             --force-rm --rm \
             --build-arg CI=true \
@@ -110,7 +111,9 @@ jobs:
       -
         name: Save base Docker image
         if: needs.check_envoronment.outputs.action == 'build'
-        run: docker save ghcr.io/concrete5-community/docker5:base | gzip > /tmp/base-image.tgz
+        run: |
+          set -o pipefail
+          docker save ghcr.io/concrete5-community/docker5:base | gzip > /tmp/base-image.tgz
       -
         name: Upload artifact
         if: needs.check_envoronment.outputs.action == 'build'
@@ -118,6 +121,7 @@ jobs:
         with:
           name: base-image
           path: /tmp/base-image.tgz
+          if-no-files-found: error
       -
         name: Login to the Docker container registry
         if: needs.check_envoronment.outputs.action == 'publish'
@@ -182,6 +186,7 @@ jobs:
       -
         name: Build with starting point ${{ matrix.data.c5_startingpoint }}
         run: |
+          set -o pipefail
           docker build \
             --build-arg CI=true \
             --build-arg CCM_PHP_VERSION=${{ matrix.data.php_version }} \
