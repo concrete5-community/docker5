@@ -98,30 +98,13 @@ jobs:
         name: Checkout
         uses: actions/checkout@v6
       -
-        name: Build
-        run: |
-          set -o pipefail
-          docker build \
-            --force-rm --rm \
-            --build-arg CI=true \
-            --tag ghcr.io/concrete5-community/docker5:base \
-            ./base \
-            2>&1 \
-            | sed 's/^#[0-9]\+ [0-9.]\+ //g'
-      -
-        name: Save base Docker image
-        if: needs.check_envoronment.outputs.action == 'build'
-        run: |
-          set -o pipefail
-          docker save ghcr.io/concrete5-community/docker5:base | gzip > /tmp/base-image.tgz
-      -
-        name: Upload artifact
-        if: needs.check_envoronment.outputs.action == 'build'
-        uses: actions/upload-artifact@v7
+        name: Set up QEMU
+        uses: docker/setup-qemu-action@v4
         with:
-          name: base-image
-          path: /tmp/base-image.tgz
-          if-no-files-found: error
+          platforms: arm64
+      -
+        name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
       -
         name: Login to the Docker container registry
         if: needs.check_envoronment.outputs.action == 'publish'
@@ -131,9 +114,24 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
       -
-        name: Publish image
-        if: needs.check_envoronment.outputs.action == 'publish'
-        run: docker push ghcr.io/concrete5-community/docker5:base
+        name: Build
+        uses: docker/build-push-action@v7
+        with:
+          context: ./base
+          platforms: linux/amd64,linux/arm64
+          build-args: CI=true
+          tags: ghcr.io/concrete5-community/docker5:base
+          # When publishing, push the multi-platform image to the registry.
+          # Otherwise, save it as an OCI image layout archive to be used by the build job.
+          outputs: ${{ needs.check_envoronment.outputs.action == 'publish' && 'type=registry' || 'type=oci,dest=/tmp/base-image.tar' }}
+      -
+        name: Upload artifact
+        if: needs.check_envoronment.outputs.action == 'build'
+        uses: actions/upload-artifact@v7
+        with:
+          name: base-image
+          path: /tmp/base-image.tar
+          if-no-files-found: error
 
   generate_matrix:
     name: Generate matrix
@@ -180,28 +178,53 @@ jobs:
           name: base-image
           path: /tmp/
       -
-        name: Load base image
+        name: Extract base image
         if: needs.check_envoronment.outputs.action == 'build'
-        run: docker load --input /tmp/base-image.tgz
+        run: |
+          mkdir /tmp/base-image
+          tar -xf /tmp/base-image.tar -C /tmp/base-image
+          rm /tmp/base-image.tar
+      -
+        name: Set up QEMU
+        uses: docker/setup-qemu-action@v4
+        with:
+          platforms: arm64
+      -
+        name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
+      -
+        name: Configure build
+        id: config
+        run: |
+          tags='ghcr.io/concrete5-community/docker5:${{ matrix.data.image_tag }}'
+          for additional_tag in ${{ matrix.data.additional_tags }}; do
+            tags="$tags,ghcr.io/concrete5-community/docker5:$additional_tag"
+          done
+          echo "tags=$tags" >> $GITHUB_OUTPUT
+          if [ '${{ needs.check_envoronment.outputs.action }}' = build ]; then
+            # Use the (unpublished) base image built by the build_base job
+            echo 'build-contexts=ghcr.io/concrete5-community/docker5:base=oci-layout:///tmp/base-image:base' >> $GITHUB_OUTPUT
+          else
+            echo 'build-contexts=' >> $GITHUB_OUTPUT
+          fi
       -
         name: Build with starting point ${{ matrix.data.c5_startingpoint }}
-        run: |
-          set -o pipefail
-          docker build \
-            --build-arg CI=true \
-            --build-arg CCM_PHP_VERSION=${{ matrix.data.php_version }} \
-            --build-arg CCM_COMPOSER_VERSION=${{ matrix.data.composer_version }} \
-            --build-arg CCM_PHPUNIT_VERSION=${{ matrix.data.phpunit_version }} \
-            --build-arg CCM_C5_ARCHIVE=${{ matrix.data.c5_archive }} \
-            --build-arg CCM_STARTING_POINT=${{ matrix.data.c5_startingpoint }} \
-            --build-arg CCM_PATCH_ENVIRONMENT_ONLY=${{ matrix.data.patch_environment_only }} \
-            --tag ghcr.io/concrete5-community/docker5:${{ matrix.data.image_tag }} \
-            ./installed \
-            2>&1 \
-            | sed 's/^#[0-9]\+ [0-9.]\+ //g'
-          for additional_tag in ${{ matrix.data.additional_tags }}; do
-            docker tag ghcr.io/concrete5-community/docker5:${{ matrix.data.image_tag }} ghcr.io/concrete5-community/docker5:$additional_tag
-          done
+        uses: docker/build-push-action@v7
+        with:
+          context: ./installed
+          platforms: linux/amd64
+          build-contexts: ${{ steps.config.outputs.build-contexts }}
+          build-args: |
+            CI=true
+            CCM_PHP_VERSION=${{ matrix.data.php_version }}
+            CCM_COMPOSER_VERSION=${{ matrix.data.composer_version }}
+            CCM_PHPUNIT_VERSION=${{ matrix.data.phpunit_version }}
+            CCM_C5_ARCHIVE=${{ matrix.data.c5_archive }}
+            CCM_STARTING_POINT=${{ matrix.data.c5_startingpoint }}
+            CCM_PATCH_ENVIRONMENT_ONLY=${{ matrix.data.patch_environment_only }}
+          tags: ${{ steps.config.outputs.tags }}
+          # Load the amd64 image into the local Docker image store, so that we can test it
+          load: true
       -
         name: Check that MariaDB works
         run: docker run --rm --entrypoint='' ghcr.io/concrete5-community/docker5:${{ matrix.data.image_tag }} ccm-service start db
@@ -222,10 +245,6 @@ jobs:
         if: needs.check_envoronment.outputs.action == 'build' && matrix.data.image_tag == '9.4.1'
         run: docker run --rm --entrypoint='' ghcr.io/concrete5-community/docker5:${{ matrix.data.image_tag }} ccm-install php-cs-fixer
       -
-        name: Remove base Docker image
-        if: needs.check_envoronment.outputs.action == 'publish'
-        run: docker rmi ghcr.io/concrete5-community/docker5:base || true
-      -
         name: Login to the Docker container registry
         if: needs.check_envoronment.outputs.action == 'publish'
         uses: docker/login-action@v4
@@ -234,9 +253,24 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
       -
-        name: Publish image
-        if: needs.check_envoronment.outputs.action == 'publish'
-        run: docker push  --all-tags ghcr.io/concrete5-community/docker5
+        name: Build multi-platform image
+        uses: docker/build-push-action@v7
+        with:
+          context: ./installed
+          platforms: linux/amd64,linux/arm64
+          build-contexts: ${{ steps.config.outputs.build-contexts }}
+          build-args: |
+            CI=true
+            CCM_PHP_VERSION=${{ matrix.data.php_version }}
+            CCM_COMPOSER_VERSION=${{ matrix.data.composer_version }}
+            CCM_PHPUNIT_VERSION=${{ matrix.data.phpunit_version }}
+            CCM_C5_ARCHIVE=${{ matrix.data.c5_archive }}
+            CCM_STARTING_POINT=${{ matrix.data.c5_startingpoint }}
+            CCM_PATCH_ENVIRONMENT_ONLY=${{ matrix.data.patch_environment_only }}
+          tags: ${{ steps.config.outputs.tags }}
+          # The amd64 image comes from the build cache: only the arm64 one is actually built here.
+          # Tags are published with a multi-platform manifest, so that Docker picks the right architecture automatically.
+          push: ${{ needs.check_envoronment.outputs.action == 'publish' }}
 
   store-data-matrix:
     name: Store data matrix

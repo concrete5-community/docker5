@@ -50,34 +50,47 @@ jobs:
         id: check
         run: ./.github/workflows/ongoing-branch-check ${{ matrix.data.repo_branch }} ${{ matrix.data.c5_startingpoint }}
       -
-        name: Fetch base Docker image
+        name: Set up QEMU
         if: steps.check.outputs.BUILD_SHA1
-        run: docker pull ghcr.io/concrete5-community/docker5:base
+        uses: docker/setup-qemu-action@v4
+        with:
+          platforms: arm64
+      -
+        name: Set up Docker Buildx
+        if: steps.check.outputs.BUILD_SHA1
+        uses: docker/setup-buildx-action@v4
+      -
+        name: Configure build
+        id: config
+        if: steps.check.outputs.BUILD_SHA1
+        run: |
+          tags='ghcr.io/concrete5-community/docker5:${{ matrix.data.image_tag }}'
+          for additional_tag in ${{ matrix.data.additional_tags }}; do
+            tags="$tags,ghcr.io/concrete5-community/docker5:$additional_tag"
+          done
+          echo "tags=$tags" >> $GITHUB_OUTPUT
       -
         name: Build with starting point ${{ matrix.data.c5_startingpoint }}
         if: steps.check.outputs.BUILD_SHA1
-        run: |
-          docker build \
-              --build-arg CI=true \
-              --build-arg CCM_PHP_VERSION=${{ matrix.data.php_version }} \
-              --build-arg CCM_COMPOSER_VERSION=${{ matrix.data.composer_version }} \
-              --build-arg CCM_PHPUNIT_VERSION=${{ matrix.data.phpunit_version }} \
-              --build-arg CCM_C5_ARCHIVE=https://codeload.github.com/concretecms/concretecms/tar.gz/${{ steps.check.outputs.BUILD_SHA1 }} \
-              --build-arg CCM_STARTING_POINT=${{ matrix.data.c5_startingpoint }} \
-              --build-arg CCM_PATCH_ENVIRONMENT_ONLY=${{ matrix.data.patch_environment_only }} \
-              --tag ghcr.io/concrete5-community/docker5:${{ matrix.data.image_tag }} \
-              ./installed
-          for additional_tag in ${{ matrix.data.additional_tags }}; do
-            docker tag ghcr.io/concrete5-community/docker5:${{ matrix.data.image_tag }} ghcr.io/concrete5-community/docker5:$additional_tag
-          done
+        uses: docker/build-push-action@v7
+        with:
+          context: ./installed
+          platforms: linux/amd64
+          build-args: |
+            CI=true
+            CCM_PHP_VERSION=${{ matrix.data.php_version }}
+            CCM_COMPOSER_VERSION=${{ matrix.data.composer_version }}
+            CCM_PHPUNIT_VERSION=${{ matrix.data.phpunit_version }}
+            CCM_C5_ARCHIVE=https://codeload.github.com/concretecms/concretecms/tar.gz/${{ steps.check.outputs.BUILD_SHA1 }}
+            CCM_STARTING_POINT=${{ matrix.data.c5_startingpoint }}
+            CCM_PATCH_ENVIRONMENT_ONLY=${{ matrix.data.patch_environment_only }}
+          tags: ${{ steps.config.outputs.tags }}
+          # Load the amd64 image into the local Docker image store, so that we can test it
+          load: true
       -
         name: Check that MariaDB works
         if: steps.check.outputs.BUILD_SHA1
         run: docker run --rm --entrypoint='' ghcr.io/concrete5-community/docker5:${{ matrix.data.image_tag }} ccm-service start db
-      -
-        name: Remove base Docker image
-        if: steps.check.outputs.BUILD_SHA1
-        run: docker rmi ghcr.io/concrete5-community/docker5:base || true
       -
         name: Login to the Docker container registry
         if: steps.check.outputs.BUILD_SHA1
@@ -87,9 +100,23 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
       -
-        name: Publish image
+        name: Publish multi-platform image
         if: steps.check.outputs.BUILD_SHA1
-        run: docker push  --all-tags ghcr.io/concrete5-community/docker5
+        uses: docker/build-push-action@v7
+        with:
+          context: ./installed
+          platforms: linux/amd64,linux/arm64
+          build-args: |
+            CI=true
+            CCM_PHP_VERSION=${{ matrix.data.php_version }}
+            CCM_COMPOSER_VERSION=${{ matrix.data.composer_version }}
+            CCM_PHPUNIT_VERSION=${{ matrix.data.phpunit_version }}
+            CCM_C5_ARCHIVE=https://codeload.github.com/concretecms/concretecms/tar.gz/${{ steps.check.outputs.BUILD_SHA1 }}
+            CCM_STARTING_POINT=${{ matrix.data.c5_startingpoint }}
+            CCM_PATCH_ENVIRONMENT_ONLY=${{ matrix.data.patch_environment_only }}
+          tags: ${{ steps.config.outputs.tags }}
+          # The amd64 image comes from the build cache: only the arm64 one is actually built here
+          push: true
       -
         name: Update repository
         if: steps.check.outputs.BUILD_SHA1

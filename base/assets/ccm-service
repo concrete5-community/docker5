@@ -3,6 +3,15 @@ set -o nounset
 set -o errexit
 
 CCM_MAILHOG_BIN=/usr/local/bin/mailhog
+# MailHog doesn't provide arm64 binaries: use Mailpit (installed with the same name, listening on the same ports) there
+case "$(uname -m)" in
+    aarch64 | arm64)
+        CCM_MAIL_SERVER=mailpit
+        ;;
+    *)
+        CCM_MAIL_SERVER=mailhog
+        ;;
+esac
 
 script_name=$0
 php_major_minor=
@@ -252,8 +261,13 @@ if test $do_mail -ne 0; then
     fi
     if test "$operation" != 'stop'; then
         if ! [ -f $CCM_MAILHOG_BIN ]; then
-            printf 'Downloading mailhog... '
-            curl -sSLf -o $CCM_MAILHOG_BIN https://github.com/mailhog/MailHog/releases/latest/download/MailHog_linux_amd64
+            if test "$CCM_MAIL_SERVER" = mailpit; then
+                printf 'Downloading mailpit... '
+                curl -sSLf https://github.com/axllent/mailpit/releases/latest/download/mailpit-linux-arm64.tar.gz | tar -xzO mailpit >$CCM_MAILHOG_BIN
+            else
+                printf 'Downloading mailhog... '
+                curl -sSLf -o $CCM_MAILHOG_BIN https://github.com/mailhog/MailHog/releases/latest/download/MailHog_linux_amd64
+            fi
             chmod +x $CCM_MAILHOG_BIN
             printf 'done.\n'
         fi
@@ -261,7 +275,11 @@ if test $do_mail -ne 0; then
         if isMailRunning; then
             printf 'already running.\n'
         else
-            foo="$($CCM_MAILHOG_BIN --storage memory -smtp-bind-addr 0.0.0.0:25 -ui-bind-addr 0.0.0.0:8025 -api-bind-addr 0.0.0.0:8025 >/var/log/mailhog.log 2>&1 &)"
+            if test "$CCM_MAIL_SERVER" = mailpit; then
+                foo="$($CCM_MAILHOG_BIN --smtp 0.0.0.0:25 --listen 0.0.0.0:8025 >/var/log/mailhog.log 2>&1 &)"
+            else
+                foo="$($CCM_MAILHOG_BIN --storage memory -smtp-bind-addr 0.0.0.0:25 -ui-bind-addr 0.0.0.0:8025 -api-bind-addr 0.0.0.0:8025 >/var/log/mailhog.log 2>&1 &)"
+            fi
             sleep 1
             if isMailRunning; then
                 printf 'done.\n'

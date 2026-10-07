@@ -1,0 +1,12 @@
+# Files that are executed or read inside the Linux Docker images (or by the
+# GitHub Actions runners) must always use LF line endings, even on Windows
+# checkouts with core.autocrlf=true: a CRLF shebang line results in errors
+# like "/bin/sh: 1: /build: not found".
+*.sh text eol=lf
+base/build text eol=lf
+installed/build text eol=lf
+base/assets/** text=auto eol=lf
+installed/assets/** text=auto eol=lf
+base/Dockerfile text eol=lf
+installed/Dockerfile text eol=lf
+.github/workflows/* text=auto eol=lf
