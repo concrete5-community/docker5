@@ -87,21 +87,30 @@ jobs:
           printf 'github.ref: %s\n' "${{ github.ref }}"
           printf 'Action to be performed: %s\n' "${{ steps.inspect.outputs.action }}"
 
+  # Every image is built natively for each architecture on its own runner (no QEMU emulation).
+  # When publishing, every architecture-specific image is pushed by digest (without tags),
+  # and a following job creates the tagged multi-platform manifests that reference them.
   build_base:
-    name: Build base image
+    name: Build base image (${{ matrix.runner.arch }})
     needs:
       - check_envoronment
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.runner.os }}
     if: needs.check_envoronment.outputs.action == 'build' || needs.check_envoronment.outputs.action == 'publish'
+    strategy:
+      matrix:
+        runner:
+          -
+            os: ubuntu-latest
+            arch: amd64
+            platform: linux/amd64
+          -
+            os: ubuntu-24.04-arm
+            arch: arm64
+            platform: linux/arm64
     steps:
       -
         name: Checkout
         uses: actions/checkout@v6
-      -
-        name: Set up QEMU
-        uses: docker/setup-qemu-action@v4
-        with:
-          platforms: arm64
       -
         name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v4
@@ -115,23 +124,74 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
       -
         name: Build
+        id: build
         uses: docker/build-push-action@v7
         with:
           context: ./base
-          platforms: linux/amd64,linux/arm64
+          platforms: ${{ matrix.runner.platform }}
           build-args: CI=true
-          tags: ghcr.io/concrete5-community/docker5:base
-          # When publishing, push the multi-platform image to the registry.
+          # When publishing, push the image by digest (the "base" tag is created by the publish_base job).
           # Otherwise, save it as an OCI image layout archive to be used by the build job.
-          outputs: ${{ needs.check_envoronment.outputs.action == 'publish' && 'type=registry' || 'type=oci,dest=/tmp/base-image.tar' }}
+          tags: ${{ needs.check_envoronment.outputs.action == 'publish' && 'ghcr.io/concrete5-community/docker5' || 'ghcr.io/concrete5-community/docker5:base' }}
+          outputs: ${{ needs.check_envoronment.outputs.action == 'publish' && 'type=image,push-by-digest=true,name-canonical=true,push=true' || 'type=oci,dest=/tmp/base-image.tar' }}
       -
-        name: Upload artifact
+        name: Upload base image artifact
         if: needs.check_envoronment.outputs.action == 'build'
         uses: actions/upload-artifact@v7
         with:
-          name: base-image
+          name: base-image-${{ matrix.runner.arch }}
           path: /tmp/base-image.tar
           if-no-files-found: error
+      -
+        name: Export digest
+        if: needs.check_envoronment.outputs.action == 'publish'
+        run: |
+          mkdir -p /tmp/digests/${{ matrix.runner.arch }}
+          printf '%s' '${{ steps.build.outputs.digest }}' > /tmp/digests/${{ matrix.runner.arch }}/digest
+      -
+        name: Upload digest artifact
+        if: needs.check_envoronment.outputs.action == 'publish'
+        uses: actions/upload-artifact@v7
+        with:
+          name: base-digest-${{ matrix.runner.arch }}
+          path: /tmp/digests/
+          if-no-files-found: error
+
+  publish_base:
+    name: Publish base image
+    needs:
+      - check_envoronment
+      - build_base
+    runs-on: ubuntu-latest
+    if: needs.check_envoronment.outputs.action == 'publish'
+    steps:
+      -
+        name: Download digests
+        uses: actions/download-artifact@v8
+        with:
+          pattern: base-digest-*
+          path: /tmp/digests
+          merge-multiple: true
+      -
+        name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
+      -
+        name: Login to the Docker container registry
+        uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      -
+        name: Create multi-platform manifest
+        run: |
+          sources=''
+          for arch in amd64 arm64; do
+            digest="$(cat "/tmp/digests/$arch/digest")"
+            sources="$sources ghcr.io/concrete5-community/docker5@$digest"
+          done
+          docker buildx imagetools create --tag ghcr.io/concrete5-community/docker5:base $sources
+          docker buildx imagetools inspect ghcr.io/concrete5-community/docker5:base
 
   generate_matrix:
     name: Generate matrix
@@ -156,16 +216,36 @@ jobs:
         run: ./.github/workflows/generate-matrix build.yml "$GITHUB_OUTPUT"
 
   build:
-    name: Build ${{ matrix.data.image_tag }}
-    runs-on: ubuntu-latest
+    name: Build ${{ matrix.data.image_tag }} (${{ matrix.runner.arch }})
+    runs-on: ${{ matrix.runner.os }}
     needs:
       - check_envoronment
       - build_base
+      - publish_base
       - generate_matrix
-    if: needs.check_envoronment.outputs.action == 'build' || needs.check_envoronment.outputs.action == 'publish'
+    # publish_base is skipped when not publishing: we still want to run when that's the case
+    if: >-
+      ${{
+        !cancelled()
+        && needs.build_base.result == 'success'
+        && needs.generate_matrix.result == 'success'
+        && (
+          (needs.check_envoronment.outputs.action == 'build' && needs.publish_base.result == 'skipped')
+          || (needs.check_envoronment.outputs.action == 'publish' && needs.publish_base.result == 'success')
+        )
+      }}
     strategy:
       matrix:
         data: ${{ fromJSON(needs.generate_matrix.outputs.generated-matrix) }}
+        runner:
+          -
+            os: ubuntu-latest
+            arch: amd64
+            platform: linux/amd64
+          -
+            os: ubuntu-24.04-arm
+            arch: arm64
+            platform: linux/arm64
     steps:
       -
         name: Checkout
@@ -175,7 +255,7 @@ jobs:
         if: needs.check_envoronment.outputs.action == 'build'
         uses: actions/download-artifact@v8
         with:
-          name: base-image
+          name: base-image-${{ matrix.runner.arch }}
           path: /tmp/
       -
         name: Extract base image
@@ -185,22 +265,12 @@ jobs:
           tar -xf /tmp/base-image.tar -C /tmp/base-image
           rm /tmp/base-image.tar
       -
-        name: Set up QEMU
-        uses: docker/setup-qemu-action@v4
-        with:
-          platforms: arm64
-      -
         name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v4
       -
         name: Configure build
         id: config
         run: |
-          tags='ghcr.io/concrete5-community/docker5:${{ matrix.data.image_tag }}'
-          for additional_tag in ${{ matrix.data.additional_tags }}; do
-            tags="$tags,ghcr.io/concrete5-community/docker5:$additional_tag"
-          done
-          echo "tags=$tags" >> $GITHUB_OUTPUT
           if [ '${{ needs.check_envoronment.outputs.action }}' = build ]; then
             # Use the (unpublished) base image built by the build_base job
             echo 'build-contexts=ghcr.io/concrete5-community/docker5:base=oci-layout:///tmp/base-image:base' >> $GITHUB_OUTPUT
@@ -212,7 +282,7 @@ jobs:
         uses: docker/build-push-action@v7
         with:
           context: ./installed
-          platforms: linux/amd64
+          platforms: ${{ matrix.runner.platform }}
           build-contexts: ${{ steps.config.outputs.build-contexts }}
           build-args: |
             CI=true
@@ -222,8 +292,8 @@ jobs:
             CCM_C5_ARCHIVE=${{ matrix.data.c5_archive }}
             CCM_STARTING_POINT=${{ matrix.data.c5_startingpoint }}
             CCM_PATCH_ENVIRONMENT_ONLY=${{ matrix.data.patch_environment_only }}
-          tags: ${{ steps.config.outputs.tags }}
-          # Load the amd64 image into the local Docker image store, so that we can test it
+          tags: ghcr.io/concrete5-community/docker5:${{ matrix.data.image_tag }}
+          # Load the image into the local Docker image store, so that we can test it
           load: true
       -
         name: Check that MariaDB works
@@ -253,11 +323,13 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
       -
-        name: Build multi-platform image
+        name: Push image by digest
+        id: push
+        if: needs.check_envoronment.outputs.action == 'publish'
         uses: docker/build-push-action@v7
         with:
           context: ./installed
-          platforms: linux/amd64,linux/arm64
+          platforms: ${{ matrix.runner.platform }}
           build-contexts: ${{ steps.config.outputs.build-contexts }}
           build-args: |
             CI=true
@@ -267,10 +339,77 @@ jobs:
             CCM_C5_ARCHIVE=${{ matrix.data.c5_archive }}
             CCM_STARTING_POINT=${{ matrix.data.c5_startingpoint }}
             CCM_PATCH_ENVIRONMENT_ONLY=${{ matrix.data.patch_environment_only }}
-          tags: ${{ steps.config.outputs.tags }}
-          # The amd64 image comes from the build cache: only the arm64 one is actually built here.
-          # Tags are published with a multi-platform manifest, so that Docker picks the right architecture automatically.
-          push: ${{ needs.check_envoronment.outputs.action == 'publish' }}
+          # The image comes from the build cache of the previous step: nothing is actually rebuilt here.
+          # It's pushed without tags: the tagged multi-platform manifests are created by the publish job.
+          tags: ghcr.io/concrete5-community/docker5
+          outputs: type=image,push-by-digest=true,name-canonical=true,push=true
+      -
+        name: Export digest
+        if: needs.check_envoronment.outputs.action == 'publish'
+        run: |
+          mkdir -p '/tmp/digests/${{ matrix.runner.arch }}-${{ matrix.data.image_tag }}'
+          printf '%s' '${{ steps.push.outputs.digest }}' > '/tmp/digests/${{ matrix.runner.arch }}-${{ matrix.data.image_tag }}/digest'
+      -
+        name: Upload digest artifact
+        if: needs.check_envoronment.outputs.action == 'publish'
+        uses: actions/upload-artifact@v7
+        with:
+          name: digest-${{ matrix.runner.arch }}-${{ matrix.data.image_tag }}
+          path: /tmp/digests/
+          if-no-files-found: error
+
+  publish:
+    name: Publish images
+    runs-on: ubuntu-latest
+    needs:
+      - check_envoronment
+      - generate_matrix
+      - build
+    if: needs.check_envoronment.outputs.action == 'publish'
+    steps:
+      -
+        name: Download digests
+        uses: actions/download-artifact@v8
+        with:
+          pattern: digest-*
+          path: /tmp/digests
+          merge-multiple: true
+      -
+        name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
+      -
+        name: Login to the Docker container registry
+        uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      -
+        name: Create multi-platform manifests
+        env:
+          GENERATED_MATRIX: ${{ needs.generate_matrix.outputs.generated-matrix }}
+        run: |
+          set -o errexit
+          set -o nounset
+          set -o pipefail
+          mapfile -t entries < <(printf '%s' "$GENERATED_MATRIX" | jq -c '.[]')
+          for entry in "${entries[@]}"; do
+            image_tag="$(printf '%s' "$entry" | jq -r '.image_tag')"
+            additional_tags="$(printf '%s' "$entry" | jq -r '.additional_tags')"
+            echo "::group::Publishing $image_tag"
+            tags="--tag ghcr.io/concrete5-community/docker5:$image_tag"
+            for additional_tag in $additional_tags; do
+              tags="$tags --tag ghcr.io/concrete5-community/docker5:$additional_tag"
+            done
+            sources=''
+            for arch in amd64 arm64; do
+              digest="$(cat "/tmp/digests/$arch-$image_tag/digest")"
+              sources="$sources ghcr.io/concrete5-community/docker5@$digest"
+            done
+            docker buildx imagetools create $tags $sources
+            docker buildx imagetools inspect "ghcr.io/concrete5-community/docker5:$image_tag"
+            echo '::endgroup::'
+          done
 
   store-data-matrix:
     name: Store data matrix

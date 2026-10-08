@@ -31,51 +31,44 @@ jobs:
         id: generate-matrix
         run: ./.github/workflows/generate-matrix ongoing-branch.yml "$GITHUB_OUTPUT"
 
+  # Every image is built natively for each architecture on its own runner (no QEMU emulation),
+  # and pushed by digest (without tags): the publish job creates the tagged multi-platform manifests.
   build:
-    name: Build ${{ matrix.data.image_tag }}
-    runs-on: ubuntu-latest
+    name: Build ${{ matrix.data.image_tag }} (${{ matrix.runner.arch }})
+    runs-on: ${{ matrix.runner.os }}
     needs:
       - generate_matrix
     strategy:
       matrix:
         data: ${{ fromJSON(needs.generate_matrix.outputs.generated-matrix) }}
+        runner:
+          -
+            os: ubuntu-latest
+            arch: amd64
+            platform: linux/amd64
+          -
+            os: ubuntu-24.04-arm
+            arch: arm64
+            platform: linux/arm64
     steps:
       -
         name: Checkout
         uses: actions/checkout@v6
-        with:
-          fetch-depth: 0
       -
         name: Check if build is needed
         id: check
         run: ./.github/workflows/ongoing-branch-check ${{ matrix.data.repo_branch }} ${{ matrix.data.c5_startingpoint }}
       -
-        name: Set up QEMU
-        if: steps.check.outputs.BUILD_SHA1
-        uses: docker/setup-qemu-action@v4
-        with:
-          platforms: arm64
-      -
         name: Set up Docker Buildx
         if: steps.check.outputs.BUILD_SHA1
         uses: docker/setup-buildx-action@v4
-      -
-        name: Configure build
-        id: config
-        if: steps.check.outputs.BUILD_SHA1
-        run: |
-          tags='ghcr.io/concrete5-community/docker5:${{ matrix.data.image_tag }}'
-          for additional_tag in ${{ matrix.data.additional_tags }}; do
-            tags="$tags,ghcr.io/concrete5-community/docker5:$additional_tag"
-          done
-          echo "tags=$tags" >> $GITHUB_OUTPUT
       -
         name: Build with starting point ${{ matrix.data.c5_startingpoint }}
         if: steps.check.outputs.BUILD_SHA1
         uses: docker/build-push-action@v7
         with:
           context: ./installed
-          platforms: linux/amd64
+          platforms: ${{ matrix.runner.platform }}
           build-args: |
             CI=true
             CCM_PHP_VERSION=${{ matrix.data.php_version }}
@@ -84,8 +77,8 @@ jobs:
             CCM_C5_ARCHIVE=https://codeload.github.com/concretecms/concretecms/tar.gz/${{ steps.check.outputs.BUILD_SHA1 }}
             CCM_STARTING_POINT=${{ matrix.data.c5_startingpoint }}
             CCM_PATCH_ENVIRONMENT_ONLY=${{ matrix.data.patch_environment_only }}
-          tags: ${{ steps.config.outputs.tags }}
-          # Load the amd64 image into the local Docker image store, so that we can test it
+          tags: ghcr.io/concrete5-community/docker5:${{ matrix.data.image_tag }}
+          # Load the image into the local Docker image store, so that we can test it
           load: true
       -
         name: Check that MariaDB works
@@ -100,12 +93,13 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
       -
-        name: Publish multi-platform image
+        name: Push image by digest
+        id: push
         if: steps.check.outputs.BUILD_SHA1
         uses: docker/build-push-action@v7
         with:
           context: ./installed
-          platforms: linux/amd64,linux/arm64
+          platforms: ${{ matrix.runner.platform }}
           build-args: |
             CI=true
             CCM_PHP_VERSION=${{ matrix.data.php_version }}
@@ -114,15 +108,107 @@ jobs:
             CCM_C5_ARCHIVE=https://codeload.github.com/concretecms/concretecms/tar.gz/${{ steps.check.outputs.BUILD_SHA1 }}
             CCM_STARTING_POINT=${{ matrix.data.c5_startingpoint }}
             CCM_PATCH_ENVIRONMENT_ONLY=${{ matrix.data.patch_environment_only }}
-          tags: ${{ steps.config.outputs.tags }}
-          # The amd64 image comes from the build cache: only the arm64 one is actually built here
-          push: true
+          # The image comes from the build cache of the previous step: nothing is actually rebuilt here.
+          # It's pushed without tags: the tagged multi-platform manifests are created by the publish job.
+          tags: ghcr.io/concrete5-community/docker5
+          outputs: type=image,push-by-digest=true,name-canonical=true,push=true
       -
-        name: Update repository
+        name: Export digest
         if: steps.check.outputs.BUILD_SHA1
+        run: |
+          mkdir -p '/tmp/digests/${{ matrix.runner.arch }}-${{ matrix.data.image_tag }}'
+          printf '%s' '${{ steps.push.outputs.digest }}' > '/tmp/digests/${{ matrix.runner.arch }}-${{ matrix.data.image_tag }}/digest'
+          printf '%s' '${{ steps.check.outputs.BUILD_SHA1 }}' > '/tmp/digests/${{ matrix.runner.arch }}-${{ matrix.data.image_tag }}/build-sha1'
+      -
+        name: Upload digest artifact
+        if: steps.check.outputs.BUILD_SHA1
+        uses: actions/upload-artifact@v7
+        with:
+          name: digest-${{ matrix.runner.arch }}-${{ matrix.data.image_tag }}
+          path: /tmp/digests/
+          if-no-files-found: error
+      -
+        name: Notify failures
+        if: failure()
+        uses: appleboy/telegram-action@master
+        with:
+          token: ${{ secrets.TELEGRAM_TOKEN }}
+          to: '-1001989057474'
+          message: Building ongoing branches failed on https://github.com/concrete5-community/docker5/actions/runs/${{ github.run_id }}
+
+  publish:
+    name: Publish images
+    runs-on: ubuntu-latest
+    needs:
+      - generate_matrix
+      - build
+    steps:
+      -
+        name: Checkout
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      -
+        name: Download digests
+        uses: actions/download-artifact@v8
+        with:
+          pattern: digest-*
+          path: /tmp/digests
+          merge-multiple: true
+      -
+        name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
+      -
+        name: Login to the Docker container registry
+        uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      -
+        name: Create multi-platform manifests
         env:
-          BUILT_SHA1: ${{ steps.check.outputs.BUILD_SHA1 }}
-        run: ./.github/workflows/ongoing-branch-updated ${{ matrix.data.repo_branch }} ${{ matrix.data.c5_startingpoint }}
+          GENERATED_MATRIX: ${{ needs.generate_matrix.outputs.generated-matrix }}
+        run: |
+          set -o errexit
+          set -o nounset
+          set -o pipefail
+          mapfile -t entries < <(printf '%s' "$GENERATED_MATRIX" | jq -c '.[]')
+          for entry in "${entries[@]}"; do
+            image_tag="$(printf '%s' "$entry" | jq -r '.image_tag')"
+            additional_tags="$(printf '%s' "$entry" | jq -r '.additional_tags')"
+            repo_branch="$(printf '%s' "$entry" | jq -r '.repo_branch')"
+            c5_startingpoint="$(printf '%s' "$entry" | jq -r '.c5_startingpoint')"
+            if ! [ -d "/tmp/digests/amd64-$image_tag" ] && ! [ -d "/tmp/digests/arm64-$image_tag" ]; then
+              echo "$image_tag was not rebuilt: nothing to publish"
+              continue
+            fi
+            echo "::group::Publishing $image_tag"
+            tags="--tag ghcr.io/concrete5-community/docker5:$image_tag"
+            for additional_tag in $additional_tags; do
+              tags="$tags --tag ghcr.io/concrete5-community/docker5:$additional_tag"
+            done
+            sources=''
+            build_sha1=''
+            for arch in amd64 arm64; do
+              if ! [ -d "/tmp/digests/$arch-$image_tag" ]; then
+                echo "Missing $arch image for $image_tag" >&2
+                exit 1
+              fi
+              digest="$(cat "/tmp/digests/$arch-$image_tag/digest")"
+              sources="$sources ghcr.io/concrete5-community/docker5@$digest"
+              arch_build_sha1="$(cat "/tmp/digests/$arch-$image_tag/build-sha1")"
+              if [ -n "$build_sha1" ] && [ "$build_sha1" != "$arch_build_sha1" ]; then
+                echo "The $image_tag images were built from different commits ($build_sha1 vs $arch_build_sha1)" >&2
+                exit 1
+              fi
+              build_sha1="$arch_build_sha1"
+            done
+            docker buildx imagetools create $tags $sources
+            docker buildx imagetools inspect "ghcr.io/concrete5-community/docker5:$image_tag"
+            BUILT_SHA1="$build_sha1" ./.github/workflows/ongoing-branch-updated "$repo_branch" "$c5_startingpoint"
+            echo '::endgroup::'
+          done
       -
         name: Notify failures
         if: failure()
