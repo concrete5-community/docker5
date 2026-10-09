@@ -272,6 +272,19 @@ ccm-service restart db
 ccm-service status php-fpm nginx
 ```
 
+## ARM64 support
+
+docker5 images are published for both `linux/amd64` and `linux/arm64`.
+The image tags listed above point to multi-platform manifests, so Docker automatically pulls the native image for your machine (for example on Windows on ARM / Snapdragon, Apple Silicon, or ARM Linux servers): you don't need to specify any `--platform` option.
+
+Native ARM64 images are strongly recommended on ARM machines: running the `linux/amd64` images under QEMU emulation is unreliable (for example PHP-FPM may hang, resulting in `502 Bad Gateway` errors).
+So, avoid forcing `--platform linux/amd64` on ARM hosts.
+If you really need a specific architecture, the full version tags (like `9.5.5` and `9.5.5-full`) also exist with an `-amd64` or `-arm64` suffix (for example `9.5.5-full-arm64`).
+
+Please note that the ARM64 images use [Mailpit](https://mailpit.axllent.org/) instead of [MailHog](https://github.com/mailhog/MailHog) (which doesn't provide ARM64 binaries): it listens on the same ports (`25` for SMTP, `8025` for the webmail).
+
+If you build the images yourself on Windows, make sure that the shell scripts have LF line endings (this repository enforces that via its `.gitattributes` file): scripts with CRLF line endings fail with errors like `/bin/sh: 1: /build: not found`.
+
 ## Notifications
 
 This repository contains a copuple of scheduled GitHub Actions.

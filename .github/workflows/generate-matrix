@@ -31,7 +31,11 @@ function main(string $workflowID, string $outputFile): void
     } else {
         echo "Genetated matrix:\n{$json}\n";
         file_put_contents($outputFile, "generated-matrix<<EOF\n{$json}\nEOF\n", FILE_APPEND);
-    }    
+    }
+    if ($workflow === Workflow::Build) {
+        $json = json_encode($versions->serializeArchives(), JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR);
+        file_put_contents($outputFile, "archives<<EOF\n{$json}\nEOF\n", FILE_APPEND);
+    }
 }
 
 function readDataFile(string $jsonFilePath): Versions
@@ -93,6 +97,20 @@ class Versions
         foreach ($this->list as $version) {
             if ($workflow !== Workflow::OngoingBranch || $version->isDevVersion) {
                 $version->serialize($result, $alreadySerializedVersions);
+            }
+        }
+        return $result;
+    }
+
+    /**
+     * The release archives (development branches are excluded since their archives change over time).
+     */
+    public function serializeArchives(): array
+    {
+        $result = [];
+        foreach ($this->list as $version) {
+            if (!$version->isDevVersion) {
+                $result[] = ['version' => $version->version, 'url' => $version->archiveUrl];
             }
         }
         return $result;

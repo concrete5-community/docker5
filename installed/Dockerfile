@@ -1,3 +1,6 @@
+# Overridden by the CI with a build context containing the Concrete archive
+FROM scratch AS c5-archive
+
 FROM ghcr.io/concrete5-community/docker5:base
 
 ARG CI=
@@ -13,5 +16,6 @@ COPY assets/app-patch /tmp/
 COPY assets/start-patch /tmp/
 COPY assets/php-cs-fixer.config.php /tmp
 COPY build /
+COPY --from=c5-archive / /tmp/c5-archive/
 
 RUN /build && rm /build

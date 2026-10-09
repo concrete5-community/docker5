@@ -1,0 +1,9 @@
+# Scripts run inside the Linux images: CRLF line endings would break them
+*.sh text eol=lf
+base/build text eol=lf
+installed/build text eol=lf
+base/assets/** text=auto eol=lf
+installed/assets/** text=auto eol=lf
+base/Dockerfile text eol=lf
+installed/Dockerfile text eol=lf
+.github/workflows/* text=auto eol=lf

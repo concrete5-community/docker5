@@ -3,9 +3,6 @@
 set -o errexit
 set -o nounset
 
-downloadRetries=20
-downloadSleepFactor=20
-
 startSection() {
     if [ "${CI:-}" = true ]; then
         echo "::group::$1"
@@ -22,53 +19,6 @@ endSection() {
     fi
 }
 
-downloadZip() {
-    downloadZip_attempt=1
-    while true; do
-        downloadZip_tempFile=$(mktemp) || return 1
-        if ! curl -sSLf -o "$downloadZip_tempFile" "$1"; then
-            echo "Download attempt $downloadZip_attempt failed" >&2
-        elif ! unzip -tq "$downloadZip_tempFile" >/dev/null 2>&1; then
-            echo "ZIP validation attempt $downloadZip_attempt failed" >&2
-        else
-            printf '%s\n' "$downloadZip_tempFile"
-            return 0
-        fi
-        rm -f "$downloadZip_tempFile"
-        if [ $downloadZip_attempt -ge $downloadRetries ]; then
-            echo "Download failed after $downloadZip_attempt attempts" >&2
-            return 1
-        fi
-        
-        printf "Sleeping for %s seconds and retrying...\n" $((downloadZip_attempt * downloadSleepFactor)) >&2
-        sleep $((downloadZip_attempt * downloadSleepFactor))
-        downloadZip_attempt=$((downloadZip_attempt + 1))
-    done
-}
-
-downloadTGZ() {
-    downloadTGZ_attempt=1
-    while true; do
-        downloadTGZ_tempFile=$(mktemp) || return 1
-        if ! curl -sSLf -o "$downloadTGZ_tempFile" "$1"; then
-            echo "Download attempt $downloadTGZ_attempt failed" >&2
-        elif ! tar -tzf "$downloadTGZ_tempFile" >/dev/null 2>&1; then
-            echo "TGZ validation attempt $downloadTGZ_attempt failed" >&2
-        else
-            printf '%s\n' "$downloadTGZ_tempFile"
-            return 0
-        fi
-        rm -f "$downloadTGZ_tempFile"
-        if [ $downloadTGZ_attempt -ge $downloadRetries ]; then
-            echo "Download failed after $downloadTGZ_attempt attempts" >&2
-            return 1
-        fi
-        printf "Sleeping for %s seconds and retrying...\n" $((downloadTGZ_attempt * downloadSleepFactor)) >&2
-        sleep $((downloadTGZ_attempt * downloadSleepFactor))
-        downloadTGZ_attempt=$((downloadTGZ_attempt + 1))
-    done
-}
-
 startSection 'Configuring environment'
 printf '(PHP version: %s, Composer version: %s)\n' "$CCM_PHP_VERSION" "$CCM_COMPOSER_VERSION"
 switch-php "$CCM_PHP_VERSION"
@@ -78,27 +28,25 @@ ccm-service start db
 endSection
 
 startSection 'Downloading and extracting ConcreteCMS'
-printf '(URL: %s)\n' "$CCM_C5_ARCHIVE"
-if test "$CCM_C5_ARCHIVE" != "${CCM_C5_ARCHIVE#https://github.com/}" || test "$CCM_C5_ARCHIVE" != "${CCM_C5_ARCHIVE#https://codeload.github.com/}"; then
-    if ! tgzFile=$(downloadTGZ "$CCM_C5_ARCHIVE"); then
-        echo "Failed to download and validate TGZ file from $CCM_C5_ARCHIVE" >&2
-        exit 1
-    fi
-    chmod 0644 "$tgzFile"
-    sudo -u www-data -- tar xzf "$tgzFile" --strip 1
-    rm -f "$tgzFile"
+archiveFile="$(find /tmp/c5-archive -type f 2>/dev/null | head -n1)"
+if test -n "$archiveFile"; then
+    printf '(local file: %s)\n' "$archiveFile"
 else
-    if ! zipFile=$(downloadZip "$CCM_C5_ARCHIVE"); then
-        echo "Failed to download and validate ZIP file from $CCM_C5_ARCHIVE" >&2
-        exit 1
-    fi
-    chmod 0644 "$zipFile"
+    printf '(URL: %s)\n' "$CCM_C5_ARCHIVE"
+    archiveFile=$(mktemp)
+    curl -sSLf --retry 2 --retry-delay 10 --retry-all-errors -o "$archiveFile" "$CCM_C5_ARCHIVE"
+fi
+chmod 0644 "$archiveFile"
+if tar -tzf "$archiveFile" >/dev/null 2>&1; then
+    sudo -u www-data -- tar xzf "$archiveFile" --strip 1
+else
     sudo -u www-data -- mkdir /tmp/c5
-    sudo -u www-data -- unzip -q "$zipFile" -d /tmp/c5
+    sudo -u www-data -- unzip -q "$archiveFile" -d /tmp/c5
     mv /tmp/c5/*/** /app
-    rm -rf "$zipFile" /tmp/c5
+    rm -rf /tmp/c5
     chmod +x concrete/bin/concrete5
 fi
+rm -rf "$archiveFile" /tmp/c5-archive
 endSection
 
 if ! test -d concrete/vendor; then
