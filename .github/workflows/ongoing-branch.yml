@@ -218,6 +218,11 @@ jobs:
             echo '::endgroup::'
           done
       -
+        name: Delete old images
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: ./.github/workflows/delete-orphaned-images
+      -
         name: Notify failures
         if: failure()
         uses: appleboy/telegram-action@master
