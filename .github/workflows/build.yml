@@ -35,6 +35,13 @@ on:
           - publish
           - update-data-matrix-only
 
+permissions:
+  contents: read
+
+# Runs that push images never overlap, in this and in the ongoing-branch workflow
+concurrency:
+  group: ${{ github.event_name == 'pull_request' && format('build-pr-{0}', github.event.number) || 'ghcr' }}
+
 jobs:
 
   check_envoronment:
@@ -88,8 +95,12 @@ jobs:
           printf 'Action to be performed: %s\n' "${{ steps.inspect.outputs.action }}"
 
   # Images are built natively per architecture and tagged with an "-<arch>" suffix: the publish jobs create the multi-platform manifests
+  # Provenance attestations are disabled: they would add untagged (but referenced) versions to the GHCR package
   build_base:
     name: Build base image (${{ matrix.runner.arch }})
+    permissions:
+      contents: read
+      packages: write
     needs:
       - check_envoronment
     runs-on: ${{ matrix.runner.os }}
@@ -125,6 +136,7 @@ jobs:
         id: build
         uses: docker/build-push-action@v7
         with:
+          provenance: false
           context: ./base
           platforms: ${{ matrix.runner.platform }}
           build-args: CI=true
@@ -141,6 +153,8 @@ jobs:
 
   publish_base:
     name: Publish base image
+    permissions:
+      packages: write
     needs:
       - check_envoronment
       - build_base
@@ -224,6 +238,9 @@ jobs:
 
   build:
     name: Build ${{ matrix.data.image_tag }} (${{ matrix.runner.arch }})
+    permissions:
+      contents: read
+      packages: write
     runs-on: ${{ matrix.runner.os }}
     needs:
       - check_envoronment
@@ -307,6 +324,7 @@ jobs:
         name: Build with starting point ${{ matrix.data.c5_startingpoint }}
         uses: docker/build-push-action@v7
         with:
+          provenance: false
           context: ./installed
           platforms: ${{ matrix.runner.platform }}
           build-contexts: ${{ steps.config.outputs.build-contexts }}
@@ -352,6 +370,7 @@ jobs:
         if: needs.check_envoronment.outputs.action == 'publish'
         uses: docker/build-push-action@v7
         with:
+          provenance: false
           context: ./installed
           platforms: ${{ matrix.runner.platform }}
           build-contexts: ${{ steps.config.outputs.build-contexts }}
@@ -369,6 +388,9 @@ jobs:
 
   publish:
     name: Publish images
+    permissions:
+      contents: read
+      packages: write
     runs-on: ubuntu-latest
     needs:
       - check_envoronment
@@ -376,6 +398,9 @@ jobs:
       - build
     if: needs.check_envoronment.outputs.action == 'publish'
     steps:
+      -
+        name: Checkout
+        uses: actions/checkout@v6
       -
         name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v4
@@ -407,9 +432,16 @@ jobs:
             docker buildx imagetools inspect "ghcr.io/concrete5-community/docker5:$image_tag"
             echo '::endgroup::'
           done
+      -
+        name: Delete old images
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: ./.github/workflows/delete-orphaned-images
 
   store-data-matrix:
     name: Store data matrix
+    permissions:
+      contents: write
     runs-on: ubuntu-latest
     needs:
       - check_envoronment

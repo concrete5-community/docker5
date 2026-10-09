@@ -1,0 +1,74 @@
+#!/bin/sh
+
+# Delete the GHCR package versions that have no tag and are not referenced by any tagged manifest.
+# Recently created versions are kept for a grace period (also, someone may be about to tag them).
+# Usage: delete-orphaned-images [--dry-run]
+
+set -o errexit
+set -o nounset
+
+ORG=concrete5-community
+PACKAGE=docker5
+KEEP_HOURS=18
+# Stay below the GITHUB_TOKEN rate limit (1000 API requests per hour)
+MAX_DELETIONS=500
+
+dryRun=0
+if [ "${1:-}" = '--dry-run' ]; then
+    dryRun=1
+fi
+
+workDir="$(mktemp -d)"
+trap 'rm -rf "$workDir"' EXIT
+
+printf 'Listing package versions... '
+gh api --paginate "/orgs/$ORG/packages/container/$PACKAGE/versions?per_page=100" > "$workDir/pages.json"
+jq -cs 'add' "$workDir/pages.json" > "$workDir/versions.json"
+jq 'length' "$workDir/versions.json"
+
+printf 'Reading the manifests referenced by tagged versions... '
+token="$(curl -sSf "https://ghcr.io/token?scope=repository:$ORG/$PACKAGE:pull" | jq -r .token)"
+: > "$workDir/referenced.txt"
+jq -r '.[] | select(.metadata.container.tags | length > 0) | .name' "$workDir/versions.json" | while read -r digest; do
+    if ! curl -sSf \
+        -H "Authorization: Bearer $token" \
+        -H 'Accept: application/vnd.oci.image.index.v1+json, application/vnd.docker.distribution.manifest.list.v2+json, application/vnd.oci.image.manifest.v1+json, application/vnd.docker.distribution.manifest.v2+json' \
+        -o "$workDir/manifest.json" \
+        "https://ghcr.io/v2/$ORG/$PACKAGE/manifests/$digest"
+    then
+        echo "Failed to fetch the manifest $digest" >&2
+        exit 1
+    fi
+    jq -r '.manifests[]?.digest' "$workDir/manifest.json" >> "$workDir/referenced.txt"
+done
+referenced="$(sort -u "$workDir/referenced.txt" | jq -R . | jq -sc .)"
+printf '%s\n' "$referenced" | jq 'length'
+
+cutoff="$(jq -nr --argjson hours $KEEP_HOURS '(now - $hours * 3600) | todate')"
+jq -r --argjson referenced "$referenced" --arg cutoff "$cutoff" '
+    .[]
+    | select((.metadata.container.tags | length) == 0 and .created_at < $cutoff)
+    | select(.name as $name | $referenced | index($name) | not)
+    | "\(.id) \(.created_at) \(.name)"
+' "$workDir/versions.json" > "$workDir/orphans.txt"
+if ! [ -s "$workDir/orphans.txt" ]; then
+    echo 'No orphaned versions found.'
+    exit 0
+fi
+printf 'Orphaned versions: %s\n' "$(wc -l < "$workDir/orphans.txt")"
+
+deleted=0
+while read -r id createdAt digest; do
+    if [ $deleted -ge $MAX_DELETIONS ]; then
+        echo "Stopping after $MAX_DELETIONS deletions: the next run will delete the others."
+        break
+    fi
+    printf 'Deleting %s (%s)... ' "$digest" "$createdAt"
+    if [ $dryRun -eq 1 ]; then
+        echo 'skipped (dry run).'
+    else
+        gh api -X DELETE "/orgs/$ORG/packages/container/$PACKAGE/versions/$id" > /dev/null
+        echo 'done.'
+    fi
+    deleted=$((deleted + 1))
+done < "$workDir/orphans.txt"
