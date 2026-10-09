@@ -3,7 +3,7 @@ set -o nounset
 set -o errexit
 
 CCM_MAILHOG_BIN=/usr/local/bin/mailhog
-# MailHog doesn't provide arm64 binaries: use Mailpit (installed with the same name, listening on the same ports) there
+# MailHog has no arm64 binaries: use Mailpit there
 case "$(uname -m)" in
     aarch64 | arm64)
         CCM_MAIL_SERVER=mailpit

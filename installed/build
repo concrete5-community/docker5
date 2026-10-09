@@ -78,27 +78,34 @@ ccm-service start db
 endSection
 
 startSection 'Downloading and extracting ConcreteCMS'
-printf '(URL: %s)\n' "$CCM_C5_ARCHIVE"
-if test "$CCM_C5_ARCHIVE" != "${CCM_C5_ARCHIVE#https://github.com/}" || test "$CCM_C5_ARCHIVE" != "${CCM_C5_ARCHIVE#https://codeload.github.com/}"; then
-    if ! tgzFile=$(downloadTGZ "$CCM_C5_ARCHIVE"); then
-        echo "Failed to download and validate TGZ file from $CCM_C5_ARCHIVE" >&2
-        exit 1
-    fi
-    chmod 0644 "$tgzFile"
-    sudo -u www-data -- tar xzf "$tgzFile" --strip 1
-    rm -f "$tgzFile"
+archiveFile="$(find /tmp/c5-archive -type f 2>/dev/null | head -n1)"
+if test -n "$archiveFile"; then
+    printf '(local file: %s)\n' "$archiveFile"
 else
-    if ! zipFile=$(downloadZip "$CCM_C5_ARCHIVE"); then
-        echo "Failed to download and validate ZIP file from $CCM_C5_ARCHIVE" >&2
-        exit 1
+    printf '(URL: %s)\n' "$CCM_C5_ARCHIVE"
+    if test "$CCM_C5_ARCHIVE" != "${CCM_C5_ARCHIVE#https://github.com/}" || test "$CCM_C5_ARCHIVE" != "${CCM_C5_ARCHIVE#https://codeload.github.com/}"; then
+        if ! archiveFile=$(downloadTGZ "$CCM_C5_ARCHIVE"); then
+            echo "Failed to download and validate TGZ file from $CCM_C5_ARCHIVE" >&2
+            exit 1
+        fi
+    else
+        if ! archiveFile=$(downloadZip "$CCM_C5_ARCHIVE"); then
+            echo "Failed to download and validate ZIP file from $CCM_C5_ARCHIVE" >&2
+            exit 1
+        fi
     fi
-    chmod 0644 "$zipFile"
+fi
+chmod 0644 "$archiveFile"
+if tar -tzf "$archiveFile" >/dev/null 2>&1; then
+    sudo -u www-data -- tar xzf "$archiveFile" --strip 1
+else
     sudo -u www-data -- mkdir /tmp/c5
-    sudo -u www-data -- unzip -q "$zipFile" -d /tmp/c5
+    sudo -u www-data -- unzip -q "$archiveFile" -d /tmp/c5
     mv /tmp/c5/*/** /app
-    rm -rf "$zipFile" /tmp/c5
+    rm -rf /tmp/c5
     chmod +x concrete/bin/concrete5
 fi
+rm -rf "$archiveFile" /tmp/c5-archive
 endSection
 
 if ! test -d concrete/vendor; then

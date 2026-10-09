@@ -31,8 +31,7 @@ jobs:
         id: generate-matrix
         run: ./.github/workflows/generate-matrix ongoing-branch.yml "$GITHUB_OUTPUT"
 
-  # Every image is built natively for each architecture on its own runner (no QEMU emulation),
-  # and pushed by digest (without tags): the publish job creates the tagged multi-platform manifests.
+  # Images are built natively per architecture and pushed by digest: the publish job creates the tagged manifests
   build:
     name: Build ${{ matrix.data.image_tag }} (${{ matrix.runner.arch }})
     runs-on: ${{ matrix.runner.os }}
@@ -78,7 +77,6 @@ jobs:
             CCM_STARTING_POINT=${{ matrix.data.c5_startingpoint }}
             CCM_PATCH_ENVIRONMENT_ONLY=${{ matrix.data.patch_environment_only }}
           tags: ghcr.io/concrete5-community/docker5:${{ matrix.data.image_tag }}
-          # Load the image into the local Docker image store, so that we can test it
           load: true
       -
         name: Check that MariaDB works
@@ -108,8 +106,7 @@ jobs:
             CCM_C5_ARCHIVE=https://codeload.github.com/concretecms/concretecms/tar.gz/${{ steps.check.outputs.BUILD_SHA1 }}
             CCM_STARTING_POINT=${{ matrix.data.c5_startingpoint }}
             CCM_PATCH_ENVIRONMENT_ONLY=${{ matrix.data.patch_environment_only }}
-          # The image comes from the build cache of the previous step: nothing is actually rebuilt here.
-          # It's pushed without tags: the tagged multi-platform manifests are created by the publish job.
+          # Taken from the build cache of the previous step
           tags: ghcr.io/concrete5-community/docker5
           outputs: type=image,push-by-digest=true,name-canonical=true,push=true
       -
