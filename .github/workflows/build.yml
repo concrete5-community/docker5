@@ -212,11 +212,15 @@ jobs:
           key: ${{ steps.key.outputs.key }}
       -
         name: Download archive
-        if: steps.cache.outputs.cache-hit != 'true'
         run: |
-          mkdir -p /tmp/c5-archive
-          curl -sSLf --retry 2 --retry-delay 10 --retry-all-errors -o /tmp/c5-archive/archive '${{ matrix.archive.url }}'
-          unzip -tq /tmp/c5-archive/archive >/dev/null
+          if [ '${{ steps.cache.outputs.cache-hit }}' = true ]; then
+            echo 'Already cached'
+          else
+            mkdir -p /tmp/c5-archive
+            curl -sSLf --retry 2 --retry-delay 10 --retry-all-errors -o /tmp/c5-archive/archive '${{ matrix.archive.url }}'
+            unzip -tq /tmp/c5-archive/archive >/dev/null
+            echo 'Downloaded'
+          fi
 
   build:
     name: Build ${{ matrix.data.image_tag }} (${{ matrix.runner.arch }})
