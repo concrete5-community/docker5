@@ -31,7 +31,7 @@ jobs:
         id: generate-matrix
         run: ./.github/workflows/generate-matrix ongoing-branch.yml "$GITHUB_OUTPUT"
 
-  # Images are built natively per architecture and pushed by digest: the publish job creates the tagged manifests
+  # Images are built natively per architecture and tagged with an "-<arch>" suffix: the publish job creates the multi-platform manifests
   build:
     name: Build ${{ matrix.data.image_tag }} (${{ matrix.runner.arch }})
     runs-on: ${{ matrix.runner.os }}
@@ -91,8 +91,7 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
       -
-        name: Push image by digest
-        id: push
+        name: Push image
         if: steps.check.outputs.BUILD_SHA1
         uses: docker/build-push-action@v7
         with:
@@ -107,22 +106,21 @@ jobs:
             CCM_STARTING_POINT=${{ matrix.data.c5_startingpoint }}
             CCM_PATCH_ENVIRONMENT_ONLY=${{ matrix.data.patch_environment_only }}
           # Taken from the build cache of the previous step
-          tags: ghcr.io/concrete5-community/docker5
-          outputs: type=image,push-by-digest=true,name-canonical=true,push=true
+          tags: ghcr.io/concrete5-community/docker5:${{ matrix.data.image_tag }}-${{ matrix.runner.arch }}
+          push: true
       -
-        name: Export digest
+        name: Save the built commit
         if: steps.check.outputs.BUILD_SHA1
         run: |
-          mkdir -p '/tmp/digests/${{ matrix.runner.arch }}-${{ matrix.data.image_tag }}'
-          printf '%s' '${{ steps.push.outputs.digest }}' > '/tmp/digests/${{ matrix.runner.arch }}-${{ matrix.data.image_tag }}/digest'
-          printf '%s' '${{ steps.check.outputs.BUILD_SHA1 }}' > '/tmp/digests/${{ matrix.runner.arch }}-${{ matrix.data.image_tag }}/build-sha1'
+          mkdir -p '/tmp/built/${{ matrix.runner.arch }}-${{ matrix.data.image_tag }}'
+          printf '%s' '${{ steps.check.outputs.BUILD_SHA1 }}' > '/tmp/built/${{ matrix.runner.arch }}-${{ matrix.data.image_tag }}/sha1'
       -
-        name: Upload digest artifact
+        name: Upload built commit artifact
         if: steps.check.outputs.BUILD_SHA1
         uses: actions/upload-artifact@v7
         with:
-          name: digest-${{ matrix.runner.arch }}-${{ matrix.data.image_tag }}
-          path: /tmp/digests/
+          name: built-${{ matrix.runner.arch }}-${{ matrix.data.image_tag }}
+          path: /tmp/built/
           if-no-files-found: error
       -
         name: Notify failures
@@ -146,11 +144,11 @@ jobs:
         with:
           fetch-depth: 0
       -
-        name: Download digests
+        name: Download built commits
         uses: actions/download-artifact@v8
         with:
-          pattern: digest-*
-          path: /tmp/digests
+          pattern: built-*
+          path: /tmp/built
           merge-multiple: true
       -
         name: Set up Docker Buildx
@@ -176,7 +174,7 @@ jobs:
             additional_tags="$(printf '%s' "$entry" | jq -r '.additional_tags')"
             repo_branch="$(printf '%s' "$entry" | jq -r '.repo_branch')"
             c5_startingpoint="$(printf '%s' "$entry" | jq -r '.c5_startingpoint')"
-            if ! [ -d "/tmp/digests/amd64-$image_tag" ] && ! [ -d "/tmp/digests/arm64-$image_tag" ]; then
+            if ! [ -d "/tmp/built/amd64-$image_tag" ] && ! [ -d "/tmp/built/arm64-$image_tag" ]; then
               echo "$image_tag was not rebuilt: nothing to publish"
               continue
             fi
@@ -185,23 +183,20 @@ jobs:
             for additional_tag in $additional_tags; do
               tags="$tags --tag ghcr.io/concrete5-community/docker5:$additional_tag"
             done
-            sources=''
             build_sha1=''
             for arch in amd64 arm64; do
-              if ! [ -d "/tmp/digests/$arch-$image_tag" ]; then
+              if ! [ -d "/tmp/built/$arch-$image_tag" ]; then
                 echo "Missing $arch image for $image_tag" >&2
                 exit 1
               fi
-              digest="$(cat "/tmp/digests/$arch-$image_tag/digest")"
-              sources="$sources ghcr.io/concrete5-community/docker5@$digest"
-              arch_build_sha1="$(cat "/tmp/digests/$arch-$image_tag/build-sha1")"
+              arch_build_sha1="$(cat "/tmp/built/$arch-$image_tag/sha1")"
               if [ -n "$build_sha1" ] && [ "$build_sha1" != "$arch_build_sha1" ]; then
                 echo "The $image_tag images were built from different commits ($build_sha1 vs $arch_build_sha1)" >&2
                 exit 1
               fi
               build_sha1="$arch_build_sha1"
             done
-            docker buildx imagetools create $tags $sources
+            docker buildx imagetools create $tags "ghcr.io/concrete5-community/docker5:$image_tag-amd64" "ghcr.io/concrete5-community/docker5:$image_tag-arm64"
             docker buildx imagetools inspect "ghcr.io/concrete5-community/docker5:$image_tag"
             BUILT_SHA1="$build_sha1" ./.github/workflows/ongoing-branch-updated "$repo_branch" "$c5_startingpoint"
             echo '::endgroup::'

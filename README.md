@@ -279,6 +279,7 @@ The image tags listed above point to multi-platform manifests, so Docker automat
 
 Native ARM64 images are strongly recommended on ARM machines: running the `linux/amd64` images under QEMU emulation is unreliable (for example PHP-FPM may hang, resulting in `502 Bad Gateway` errors).
 So, avoid forcing `--platform linux/amd64` on ARM hosts.
+If you really need a specific architecture, the full version tags (like `9.5.5` and `9.5.5-full`) also exist with an `-amd64` or `-arm64` suffix (for example `9.5.5-full-arm64`).
 
 Please note that the ARM64 images use [Mailpit](https://mailpit.axllent.org/) instead of [MailHog](https://github.com/mailhog/MailHog) (which doesn't provide ARM64 binaries): it listens on the same ports (`25` for SMTP, `8025` for the webmail).
 

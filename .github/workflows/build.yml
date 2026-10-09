@@ -87,7 +87,7 @@ jobs:
           printf 'github.ref: %s\n' "${{ github.ref }}"
           printf 'Action to be performed: %s\n' "${{ steps.inspect.outputs.action }}"
 
-  # Images are built natively per architecture and pushed by digest: the publish jobs create the tagged manifests
+  # Images are built natively per architecture and tagged with an "-<arch>" suffix: the publish jobs create the multi-platform manifests
   build_base:
     name: Build base image (${{ matrix.runner.arch }})
     needs:
@@ -128,8 +128,8 @@ jobs:
           context: ./base
           platforms: ${{ matrix.runner.platform }}
           build-args: CI=true
-          tags: ${{ needs.check_envoronment.outputs.action == 'publish' && 'ghcr.io/concrete5-community/docker5' || 'ghcr.io/concrete5-community/docker5:base' }}
-          outputs: ${{ needs.check_envoronment.outputs.action == 'publish' && 'type=image,push-by-digest=true,name-canonical=true,push=true' || 'type=oci,dest=/tmp/base-image.tar' }}
+          tags: ${{ needs.check_envoronment.outputs.action == 'publish' && format('ghcr.io/concrete5-community/docker5:base-{0}', matrix.runner.arch) || 'ghcr.io/concrete5-community/docker5:base' }}
+          outputs: ${{ needs.check_envoronment.outputs.action == 'publish' && 'type=registry' || 'type=oci,dest=/tmp/base-image.tar' }}
       -
         name: Upload base image artifact
         if: needs.check_envoronment.outputs.action == 'build'
@@ -137,20 +137,6 @@ jobs:
         with:
           name: base-image-${{ matrix.runner.arch }}
           path: /tmp/base-image.tar
-          if-no-files-found: error
-      -
-        name: Export digest
-        if: needs.check_envoronment.outputs.action == 'publish'
-        run: |
-          mkdir -p /tmp/digests/${{ matrix.runner.arch }}
-          printf '%s' '${{ steps.build.outputs.digest }}' > /tmp/digests/${{ matrix.runner.arch }}/digest
-      -
-        name: Upload digest artifact
-        if: needs.check_envoronment.outputs.action == 'publish'
-        uses: actions/upload-artifact@v7
-        with:
-          name: base-digest-${{ matrix.runner.arch }}
-          path: /tmp/digests/
           if-no-files-found: error
 
   publish_base:
@@ -161,13 +147,6 @@ jobs:
     runs-on: ubuntu-latest
     if: needs.check_envoronment.outputs.action == 'publish'
     steps:
-      -
-        name: Download digests
-        uses: actions/download-artifact@v8
-        with:
-          pattern: base-digest-*
-          path: /tmp/digests
-          merge-multiple: true
       -
         name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v4
@@ -181,12 +160,7 @@ jobs:
       -
         name: Create multi-platform manifest
         run: |
-          sources=''
-          for arch in amd64 arm64; do
-            digest="$(cat "/tmp/digests/$arch/digest")"
-            sources="$sources ghcr.io/concrete5-community/docker5@$digest"
-          done
-          docker buildx imagetools create --tag ghcr.io/concrete5-community/docker5:base $sources
+          docker buildx imagetools create --tag ghcr.io/concrete5-community/docker5:base ghcr.io/concrete5-community/docker5:base-amd64 ghcr.io/concrete5-community/docker5:base-arm64
           docker buildx imagetools inspect ghcr.io/concrete5-community/docker5:base
 
   generate_matrix:
@@ -370,8 +344,7 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
       -
-        name: Push image by digest
-        id: push
+        name: Push image
         if: needs.check_envoronment.outputs.action == 'publish'
         uses: docker/build-push-action@v7
         with:
@@ -387,22 +360,8 @@ jobs:
             CCM_STARTING_POINT=${{ matrix.data.c5_startingpoint }}
             CCM_PATCH_ENVIRONMENT_ONLY=${{ matrix.data.patch_environment_only }}
           # Taken from the build cache of the previous step
-          tags: ghcr.io/concrete5-community/docker5
-          outputs: type=image,push-by-digest=true,name-canonical=true,push=true
-      -
-        name: Export digest
-        if: needs.check_envoronment.outputs.action == 'publish'
-        run: |
-          mkdir -p '/tmp/digests/${{ matrix.runner.arch }}-${{ matrix.data.image_tag }}'
-          printf '%s' '${{ steps.push.outputs.digest }}' > '/tmp/digests/${{ matrix.runner.arch }}-${{ matrix.data.image_tag }}/digest'
-      -
-        name: Upload digest artifact
-        if: needs.check_envoronment.outputs.action == 'publish'
-        uses: actions/upload-artifact@v7
-        with:
-          name: digest-${{ matrix.runner.arch }}-${{ matrix.data.image_tag }}
-          path: /tmp/digests/
-          if-no-files-found: error
+          tags: ghcr.io/concrete5-community/docker5:${{ matrix.data.image_tag }}-${{ matrix.runner.arch }}
+          push: true
 
   publish:
     name: Publish images
@@ -413,13 +372,6 @@ jobs:
       - build
     if: needs.check_envoronment.outputs.action == 'publish'
     steps:
-      -
-        name: Download digests
-        uses: actions/download-artifact@v8
-        with:
-          pattern: digest-*
-          path: /tmp/digests
-          merge-multiple: true
       -
         name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v4
@@ -447,12 +399,7 @@ jobs:
             for additional_tag in $additional_tags; do
               tags="$tags --tag ghcr.io/concrete5-community/docker5:$additional_tag"
             done
-            sources=''
-            for arch in amd64 arm64; do
-              digest="$(cat "/tmp/digests/$arch-$image_tag/digest")"
-              sources="$sources ghcr.io/concrete5-community/docker5@$digest"
-            done
-            docker buildx imagetools create $tags $sources
+            docker buildx imagetools create $tags "ghcr.io/concrete5-community/docker5:$image_tag-amd64" "ghcr.io/concrete5-community/docker5:$image_tag-arm64"
             docker buildx imagetools inspect "ghcr.io/concrete5-community/docker5:$image_tag"
             echo '::endgroup::'
           done
