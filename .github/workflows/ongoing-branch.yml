@@ -7,6 +7,9 @@ on:
     types:
       - build-ongoing
 
+permissions:
+  contents: read
+
 # Runs that push images never overlap, in this and in the build workflow
 concurrency:
   group: ghcr
@@ -39,6 +42,9 @@ jobs:
   # Provenance attestations are disabled: they would add untagged (but referenced) versions to the GHCR package
   build:
     name: Build ${{ matrix.data.image_tag }} (${{ matrix.runner.arch }})
+    permissions:
+      contents: read
+      packages: write
     runs-on: ${{ matrix.runner.os }}
     needs:
       - generate_matrix
@@ -140,6 +146,9 @@ jobs:
 
   publish:
     name: Publish images
+    permissions:
+      contents: write
+      packages: write
     runs-on: ubuntu-latest
     needs:
       - generate_matrix
