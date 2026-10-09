@@ -7,6 +7,10 @@ on:
     types:
       - build-ongoing
 
+# Runs that push images never overlap, in this and in the build workflow
+concurrency:
+  group: ghcr
+
 jobs:
 
   generate_matrix:

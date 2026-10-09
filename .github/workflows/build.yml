@@ -35,6 +35,10 @@ on:
           - publish
           - update-data-matrix-only
 
+# Runs that push images never overlap, in this and in the ongoing-branch workflow
+concurrency:
+  group: ${{ github.event_name == 'pull_request' && format('build-pr-{0}', github.event.number) || 'ghcr' }}
+
 jobs:
 
   check_envoronment:
