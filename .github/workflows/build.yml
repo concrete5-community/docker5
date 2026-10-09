@@ -241,7 +241,7 @@ jobs:
         if: steps.cache.outputs.cache-hit != 'true'
         run: |
           mkdir -p /tmp/c5-archive
-          curl -sSLf --retry 5 --retry-delay 10 --retry-all-errors -o /tmp/c5-archive/archive '${{ matrix.archive.url }}'
+          curl -sSLf --retry 2 --retry-delay 10 --retry-all-errors -o /tmp/c5-archive/archive '${{ matrix.archive.url }}'
           unzip -tq /tmp/c5-archive/archive >/dev/null
 
   build:
