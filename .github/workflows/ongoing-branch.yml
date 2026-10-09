@@ -32,6 +32,7 @@ jobs:
         run: ./.github/workflows/generate-matrix ongoing-branch.yml "$GITHUB_OUTPUT"
 
   # Images are built natively per architecture and tagged with an "-<arch>" suffix: the publish job creates the multi-platform manifests
+  # Provenance attestations are disabled: they would add untagged (but referenced) versions to the GHCR package
   build:
     name: Build ${{ matrix.data.image_tag }} (${{ matrix.runner.arch }})
     runs-on: ${{ matrix.runner.os }}
@@ -66,6 +67,7 @@ jobs:
         if: steps.check.outputs.BUILD_SHA1
         uses: docker/build-push-action@v7
         with:
+          provenance: false
           context: ./installed
           platforms: ${{ matrix.runner.platform }}
           build-args: |
@@ -95,6 +97,7 @@ jobs:
         if: steps.check.outputs.BUILD_SHA1
         uses: docker/build-push-action@v7
         with:
+          provenance: false
           context: ./installed
           platforms: ${{ matrix.runner.platform }}
           build-args: |

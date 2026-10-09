@@ -88,6 +88,7 @@ jobs:
           printf 'Action to be performed: %s\n' "${{ steps.inspect.outputs.action }}"
 
   # Images are built natively per architecture and tagged with an "-<arch>" suffix: the publish jobs create the multi-platform manifests
+  # Provenance attestations are disabled: they would add untagged (but referenced) versions to the GHCR package
   build_base:
     name: Build base image (${{ matrix.runner.arch }})
     needs:
@@ -125,6 +126,7 @@ jobs:
         id: build
         uses: docker/build-push-action@v7
         with:
+          provenance: false
           context: ./base
           platforms: ${{ matrix.runner.platform }}
           build-args: CI=true
@@ -307,6 +309,7 @@ jobs:
         name: Build with starting point ${{ matrix.data.c5_startingpoint }}
         uses: docker/build-push-action@v7
         with:
+          provenance: false
           context: ./installed
           platforms: ${{ matrix.runner.platform }}
           build-contexts: ${{ steps.config.outputs.build-contexts }}
@@ -352,6 +355,7 @@ jobs:
         if: needs.check_envoronment.outputs.action == 'publish'
         uses: docker/build-push-action@v7
         with:
+          provenance: false
           context: ./installed
           platforms: ${{ matrix.runner.platform }}
           build-contexts: ${{ steps.config.outputs.build-contexts }}
