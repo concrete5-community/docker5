@@ -76,6 +76,11 @@ if [ -n "${PHP_EXTENSIONS_COMMON:-}" ]; then
 fi
 apt-get install -qy --no-install-recommends $APT_PACKAGES
 unset APT_PACKAGES
+for PHP_VERSION in $PHP_VERSIONS; do
+    # Without a pid file the init script can't signal the master, and "service stop" waits 30 seconds before killing it
+    sed -i -E "s|^;?pid = .*|pid = /run/php/php$PHP_VERSION-fpm.pid|" "/etc/php/$PHP_VERSION/fpm/php-fpm.conf"
+done
+unset PHP_VERSION
 endSection
 
 startSection 'Installing NodeJS'
