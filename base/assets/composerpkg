@@ -4,4 +4,4 @@ set -o nounset
 set -o errexit
 
 ccm-install composerpkg >&2
-composerpkg "$@"
+exec composerpkg "$@"

@@ -4,4 +4,4 @@ set -o nounset
 set -o errexit
 
 ccm-install php-cs-fixer >&2
-php-cs-fixer "$@"
+exec php-cs-fixer "$@"
